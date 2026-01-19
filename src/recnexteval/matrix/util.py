@@ -1,0 +1,24 @@
+from scipy.sparse import csr_matrix
+
+from recnexteval.matrix.interaction_matrix import InteractionMatrix
+from recnexteval.utils.util import to_binary
+
+
+def to_csr_matrix(X: InteractionMatrix | csr_matrix, binary: bool = False) -> csr_matrix:
+    """Convert a matrix-like object to a scipy csr_matrix.
+
+    :param X: Matrix-like object or tuple of objects to convert.
+    :type X: csr_matrix
+    :param binary: If true, ensure matrix is binary by setting non-zero values to 1.
+    :type binary: bool, optional
+    :return: Matrices as csr_matrix.
+    :rtype: Union[csr_matrix, Tuple[csr_matrix, ...]]
+    """
+
+    if isinstance(X, csr_matrix):
+        res = X
+    elif isinstance(X, InteractionMatrix):
+        res = X.values
+    else:
+        raise AttributeError("Not supported Matrix conversion")
+    return to_binary(res) if binary else res

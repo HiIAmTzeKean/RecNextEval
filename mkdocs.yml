@@ -1,0 +1,73 @@
+site_name: RecNextEval
+repo_url: https://github.com/hiiamtzekean/recnexteval
+repo_name: HiIAmTzeKean/RecNextEval
+
+nav:
+  - Home: index.md
+  - About: about.md
+  - Poster: poster.md
+  - API Reference: reference/
+
+docs_dir: docs
+site_dir: site
+use_directory_urls: true
+
+theme:
+  name: material
+  logo: assets/_static/logo.png
+  locale: en
+  palette:
+    scheme: slate
+    primary: teal
+    accent: orange
+  features:
+    - content.code.copy
+    - navigation.top
+    - navigation.tabs
+    - navigation.path
+    - navigation.tracking
+    - toc.follow
+
+plugins:
+  - search:
+      lang: en
+  - gen-files:
+      scripts:
+        - scripts/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_bases: true
+            show_if_no_docstring: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            inherited_members: true
+            members_order: source
+            filters:
+              - "!^_"
+  - bibtex:
+      bib_file: docs/reference.bib
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+
+markdown_extensions:
+  - footnotes
+  - pymdownx.highlight:
+      default_lang: python
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+watch:
+  - docs
+  - src/recnexteval
