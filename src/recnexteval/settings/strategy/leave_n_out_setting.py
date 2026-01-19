@@ -1,8 +1,8 @@
 import logging
 
-from recnexteval.matrix import InteractionMatrix
-from .base import Setting
-from .splitters import (
+from ...matrix import InteractionMatrix
+from ..base import Setting
+from ..splitters import (
     NLastInteractionSplitter,
 )
 
@@ -36,9 +36,9 @@ class LeaveNOutSetting(Setting):
         :type data: InteractionMatrix
         """
 
-        self._background_data, future_interaction = self._splitter.split(data)
+        self._training_data, future_interaction = self._splitter.split(data)
         # we need to copy the data to avoid modifying the background data
-        past_interaction = self._background_data.copy()
+        past_interaction = self._training_data.copy()
 
         self._unlabeled_data, self._ground_truth_data = self.prediction_data_processor.process(
             past_interaction=past_interaction,
