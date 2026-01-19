@@ -1,12 +1,14 @@
 import logging
+from dataclasses import dataclass
 
-from recnexteval.evaluators.evaluator_stream import EvaluatorStreamer
+from ..stream.evaluator_stream import EvaluatorStreamer
 from .base import Builder
 
 
 logger = logging.getLogger(__name__)
 
 
+@dataclass
 class EvaluatorStreamerBuilder(Builder):
     """Builder to facilitate construction of evaluator.
 
@@ -15,24 +17,10 @@ class EvaluatorStreamerBuilder(Builder):
     errors when the evaluator is executed.
     """
 
-    def __init__(
-        self,
-        ignore_unknown_user: bool = False,
-        ignore_unknown_item: bool = False,
-        seed: int = 42,
-    ) -> None:
-        """Initialize the EvaluatorStreamerBuilder.
-
-        Args:
-            ignore_unknown_user: Ignore unknown user in the evaluation.
-            ignore_unknown_item: Ignore unknown item in the evaluation.
-            seed: Random seed for reproducibility.
-        """
-        super().__init__(
-            ignore_unknown_user=ignore_unknown_user,
-            ignore_unknown_item=ignore_unknown_item,
-            seed=seed,
-        )
+    ignore_unknown_user: bool = False
+    """Ignore unknown user in the evaluation"""
+    ignore_unknown_item: bool = False
+    """Ignore unknown item in the evaluation"""
 
     def build(self) -> EvaluatorStreamer:
         """Build Evaluator object.

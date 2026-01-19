@@ -3,12 +3,12 @@ from warnings import warn
 
 from tqdm import tqdm
 
-from recnexteval.registries import METRIC_REGISTRY, MetricEntry
-from recnexteval.settings import EOWSettingError, Setting
-from ..matrix import PredictionMatrix
-from .accumulator import MetricAccumulator
-from .base import EvaluatorBase
-from .state_management import AlgorithmStateManager
+from ...matrix import PredictionMatrix
+from ...registries import METRIC_REGISTRY, MetricEntry
+from ...settings import EOWSettingError, Setting
+from ..accumulator import MetricAccumulator
+from ..base import EvaluatorBase
+from ..state_management import AlgorithmStateManager
 
 
 logger = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ class EvaluatorPipeline(EvaluatorBase):
         training_data.mask_user_item_shape(self.user_item_base.known_shape)
 
         for algo_state in self.algo_state_mgr.values():
-            algo_state.algo_ptr.fit(training_data)
+            algo_state.algorithm_ptr.fit(X=training_data)
 
     def _ready_evaluator(self) -> None:
         """Pre-phase of the evaluator. (Phase 1)
@@ -167,7 +167,7 @@ class EvaluatorPipeline(EvaluatorBase):
         # X_true = ground_truth_data.get_users_n_first_interaction(self.metric_k)
         X_true = ground_truth_data.item_interaction_sequence_matrix
         for algo_state in self.algo_state_mgr.values():
-            X_pred = algo_state.algo_ptr.predict(unlabeled_data)
+            X_pred = algo_state.algorithm_ptr.predict(unlabeled_data)
             logger.debug("Shape of prediction matrix: %s", X_pred.shape)
             logger.debug("Shape of ground truth matrix: %s", X_true.shape)
             X_pred = self._prediction_shape_handler(X_true, X_pred)
@@ -217,7 +217,7 @@ class EvaluatorPipeline(EvaluatorBase):
         incremental_data.mask_user_item_shape(self.user_item_base.known_shape)
 
         for algo_state in self.algo_state_mgr.values():
-            algo_state.algo_ptr.fit(incremental_data)
+            algo_state.algorithm_ptr.fit(incremental_data)
 
     def run_step(self, reset=False) -> None:
         """Run a single step of the evaluator.

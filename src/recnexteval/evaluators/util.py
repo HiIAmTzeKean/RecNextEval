@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from recnexteval.matrix import InteractionMatrix
+from ..matrix import InteractionMatrix
 
 
 logger = logging.getLogger(__name__)

@@ -4,16 +4,16 @@ from uuid import UUID
 
 from scipy.sparse import csr_matrix
 
-from recnexteval.algorithms import Algorithm
-from recnexteval.matrix import InteractionMatrix, PredictionMatrix
-from recnexteval.registries import (
+from ...algorithms import Algorithm
+from ...matrix import InteractionMatrix, PredictionMatrix
+from ...registries import (
     METRIC_REGISTRY,
     MetricEntry,
 )
-from recnexteval.settings import EOWSettingError, Setting
-from .accumulator import MetricAccumulator
-from .base import EvaluatorBase
-from .state_management import AlgorithmStateEnum, AlgorithmStateManager
+from ...settings import EOWSettingError, Setting
+from ..accumulator import MetricAccumulator
+from ..base import EvaluatorBase
+from ..state_management import AlgorithmStateEnum, AlgorithmStateManager
 from .strategy import EvaluationStrategy, SlidingWindowStrategy
 
 
@@ -177,7 +177,7 @@ class EvaluatorStreamer(EvaluatorBase):
 
     def register_algorithm(
         self,
-        algorithm: None | Algorithm = None,
+        algorithm: Algorithm,
         algorithm_name: None | str = None,
     ) -> UUID:
         """Register the algorithm with the evaluator.

@@ -15,7 +15,7 @@ Example:
     from recnexteval.algorithms import ItemKNNStatic
 
     algo = ALGORITHM_REGISTRY.get("ItemKNNStatic")(K=10)
-    ALGORITHM_REGISTRY.register("algo_1", ItemKNNStatic)
+    ALGORITHM_REGISTRY.register(name="algo_1", algo_ptr=ItemKNNStatic)
     ```
 
 ### Available Registries

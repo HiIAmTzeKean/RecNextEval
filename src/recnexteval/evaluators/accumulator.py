@@ -4,7 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
-from recnexteval.metrics import Metric
+from ..metrics import Metric
 from .util import MetricLevelEnum
 
 

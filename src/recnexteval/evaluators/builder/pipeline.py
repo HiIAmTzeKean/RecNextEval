@@ -1,9 +1,10 @@
 import logging
 import uuid
+from dataclasses import dataclass, field
 from warnings import warn
 
-from recnexteval.algorithms import Algorithm
-from recnexteval.evaluators.evaluator_pipeline import EvaluatorPipeline
+from ...algorithms import Algorithm
+from ..pipeline.evaluator_pipeline import EvaluatorPipeline
 from ..state_management import AlgorithmStateManager
 from .base import Builder
 
@@ -11,6 +12,7 @@ from .base import Builder
 logger = logging.getLogger(__name__)
 
 
+@dataclass
 class EvaluatorPipelineBuilder(Builder):
     """Builder to facilitate construction of evaluator.
 
@@ -19,25 +21,12 @@ class EvaluatorPipelineBuilder(Builder):
     errors when the evaluator is executed.
     """
 
-    def __init__(
-        self,
-        ignore_unknown_user: bool = False,
-        ignore_unknown_item: bool = False,
-        seed: int = 42,
-    ) -> None:
-        """Initialize the EvaluatorPipelineBuilder.
-
-        Args:
-            ignore_unknown_user: Ignore unknown user in the evaluation.
-            ignore_unknown_item: Ignore unknown item in the evaluation.
-            seed: Random seed for reproducibility.
-        """
-        super().__init__(
-            ignore_unknown_user=ignore_unknown_user,
-            ignore_unknown_item=ignore_unknown_item,
-            seed=seed,
-        )
-        self.algo_state_mgr = AlgorithmStateManager()
+    ignore_unknown_user: bool = False
+    """Ignore unknown user in the evaluation"""
+    ignore_unknown_item: bool = False
+    """Ignore unknown item in the evaluation"""
+    algo_state_mgr: AlgorithmStateManager = field(default_factory=AlgorithmStateManager)
+    """Algorithm state manager for pipeline evaluation"""
 
     def add_algorithm(
         self,
@@ -100,7 +89,6 @@ class EvaluatorPipelineBuilder(Builder):
         """
         self._check_ready()
         return EvaluatorPipeline(
-            # algorithm_entries=self.algorithm_entries,
             algo_state_mgr=self.algo_state_mgr,
             metric_entries=list(self.metric_entries.values()),
             setting=self.setting,

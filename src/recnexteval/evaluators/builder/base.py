@@ -1,19 +1,21 @@
 import logging
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from warnings import warn
 
-from recnexteval.registries import (
+from ...registries import (
     METRIC_REGISTRY,
     MetricEntry,
 )
-from recnexteval.settings import Setting
-from recnexteval.utils import arg_to_str
+from ...settings import Setting
+from ...utils import arg_to_str
 from ..base import EvaluatorBase
 
 
 logger = logging.getLogger(__name__)
 
 
+@dataclass
 class Builder(ABC):
     """Base class for Builder objects.
 
@@ -22,30 +24,19 @@ class Builder(ABC):
     errors when the builder is executed.
     """
 
-    def __init__(
-        self,
-        ignore_unknown_user: bool = True,
-        ignore_unknown_item: bool = True,
-        seed: int = 42,
-    ) -> None:
-        """Initialize the Builder.
-
-        Args:
-            ignore_unknown_user: Ignore unknown user in the evaluation.
-            ignore_unknown_item: Ignore unknown item in the evaluation.
-            seed: Random seed for reproducibility.
-        """
-        self.metric_entries: dict[str, MetricEntry] = dict()
-        """dict of metrics to evaluate algorithm on.
-        Using dict instead of list for fast lookup"""
-        self.setting: Setting
-        """Setting to evaluate the algorithms on"""
-        self.ignore_unknown_user = ignore_unknown_user
-        """Ignore unknown user in the evaluation"""
-        self.ignore_unknown_item = ignore_unknown_item
-        """Ignore unknown item in the evaluation"""
-        self.metric_k: int
-        self.seed: int = seed
+    ignore_unknown_user: bool = True
+    """Ignore unknown user in the evaluation"""
+    ignore_unknown_item: bool = True
+    """Ignore unknown item in the evaluation"""
+    seed: int = 42
+    """Random seed for reproducibility"""
+    metric_entries: dict[str, MetricEntry] = field(default_factory=dict)
+    """dict of metrics to evaluate algorithm on.
+    Using dict instead of list for fast lookup"""
+    setting: Setting = field(default=None)
+    """Setting to evaluate the algorithms on"""
+    metric_k: int = field(default=None)
+    """K value for metrics"""
 
     def _check_setting_exist(self) -> bool:
         """Check if setting is already set.
@@ -53,9 +44,9 @@ class Builder(ABC):
         Returns:
             True if setting is set, False otherwise.
         """
-        return not (not hasattr(self, "setting") or self.setting is None)
+        return hasattr(self, "setting") and self.setting is not None
 
-    def set_metric_K(self, K: int) -> None:
+    def set_metric_k(self, K: int) -> None:
         """Set K value for all metrics.
 
         Args:

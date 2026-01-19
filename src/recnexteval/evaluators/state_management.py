@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from recnexteval.algorithms import Algorithm
+from ..algorithms import Algorithm
 from ..utils.uuid_util import generate_algorithm_uuid
 
 
@@ -37,19 +37,19 @@ class AlgorithmStateEntry:
 
     Attributes:
         name: Name of the algorithm.
-        algo_uuid: Unique identifier for the algorithm.
+        algorithm_uuid: Unique identifier for the algorithm.
+        algorithm_ptr: Pointer to the algorithm object.
         state: State of the algorithm.
         data_segment: Data segment the algorithm is associated with.
         params: Parameters for the algorithm.
-        algo_ptr: Pointer to the algorithm object.
     """
 
     name: str
     algorithm_uuid: UUID
+    algorithm_ptr: type[Algorithm] | Algorithm
     state: AlgorithmStateEnum = AlgorithmStateEnum.NEW
     data_segment: int = 0
     params: dict[str, Any] = field(default_factory=dict)
-    algo_ptr: None | type[Algorithm] | Algorithm = None
 
 
 class AlgorithmStateManager:
@@ -130,27 +130,23 @@ class AlgorithmStateManager:
 
     def register(
         self,
+        algo_ptr: type[Algorithm] | Algorithm,
         name: None | str = None,
-        algo_ptr: None | type[Algorithm] | Algorithm = None,
         params: dict[str, Any] = {},
         algo_uuid: None | UUID = None,
     ) -> UUID:
         """Register new algorithm"""
-        if not name and not algo_ptr:
-            raise ValueError("Either name or algo_ptr must be provided for registration")
-        elif algo_ptr and isinstance(algo_ptr, type):
-            algo_ptr = algo_ptr(**params)
-            name = name or algo_ptr.identifier
-        elif algo_ptr and hasattr(algo_ptr, "identifier") and not name:
+        if hasattr(algo_ptr, "identifier"):
             name = name or algo_ptr.identifier  # type: ignore[attr-defined]
-        elif not name:
-            # This should not happen if name was provided or algo_ptr has identifier
-            raise ValueError("Algorithm name was not provided and could not be inferred from Algorithm pointer")
+
+        if not name:
+            logger.warning("Algorithm name was not provided and could not be inferred from Algorithm pointer")
+            name = "UnknownAlgorithm"
 
         if algo_uuid is None:
-            algo_uuid = generate_algorithm_uuid(name)
+            algo_uuid = generate_algorithm_uuid(name=name)
 
-        entry = AlgorithmStateEntry(algorithm_uuid=algo_uuid, name=name, algo_ptr=algo_ptr, params=params)
+        entry = AlgorithmStateEntry(algorithm_uuid=algo_uuid, name=name, algorithm_ptr=algo_ptr, params=params)
         self._algorithms[algo_uuid] = entry
         logger.info(f"Registered algorithm '{name}' with ID {algo_uuid}")
         return algo_uuid
