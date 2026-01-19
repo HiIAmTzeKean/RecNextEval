@@ -63,16 +63,16 @@ class TestLeaveNOutSetting:
         """Test basic split functionality."""
         default_setting.split(matrix)
         assert default_setting.is_ready
-        assert default_setting.background_data is not None
+        assert default_setting.training_data is not None
         assert default_setting.unlabeled_data is not None
         assert default_setting.ground_truth_data is not None
         assert default_setting.t_window is None
         assert default_setting.num_split == 1
 
-    def test_background_data_content(self, default_setting: LeaveNOutSetting, matrix: InteractionMatrix) -> None:
+    def test_training_data_content(self, default_setting: LeaveNOutSetting, matrix: InteractionMatrix) -> None:
         """Test background data content after split."""
         default_setting.split(matrix)
-        bg_data = default_setting.background_data
+        bg_data = default_setting.training_data
         assert isinstance(bg_data, InteractionMatrix)
         # Verify that background data excludes the last N interactions per user
         # This is a simplified check; in practice, it depends on the splitter logic
@@ -125,7 +125,7 @@ class TestLeaveNOutSetting:
     def test_access_properties_before_split(self, default_setting: LeaveNOutSetting) -> None:
         """Test accessing properties before split raises KeyError."""
         with pytest.raises(KeyError):
-            _ = default_setting.background_data
+            _ = default_setting.training_data
         with pytest.raises(KeyError):
             _ = default_setting.unlabeled_data
         with pytest.raises(KeyError):

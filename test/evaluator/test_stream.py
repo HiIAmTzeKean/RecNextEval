@@ -5,7 +5,7 @@ import pytest
 from recnexteval.algorithms import ItemKNNIncremental
 from recnexteval.datasets import Dataset
 from recnexteval.evaluators import EvaluatorStreamerBuilder
-from recnexteval.settings.sliding_window_setting import SlidingWindowSetting
+from recnexteval.settings import SlidingWindowSetting
 
 
 @pytest.fixture

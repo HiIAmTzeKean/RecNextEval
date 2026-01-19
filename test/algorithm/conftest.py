@@ -1,7 +1,7 @@
 import pytest
 
 from recnexteval.datasets import Dataset
-from recnexteval.settings.sliding_window_setting import SlidingWindowSetting
+from recnexteval.settings import SlidingWindowSetting
 
 
 @pytest.fixture
