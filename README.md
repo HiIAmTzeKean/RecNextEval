@@ -3,8 +3,8 @@
 ![recnexteval-logo](https://github.com/HiIAmTzeKean/recnexteval/raw/master/docs/assets/_static/logo_name.png)
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/recnexteval.svg)](https://pypi.org/project/recnexteval/)&nbsp;&nbsp;
-[![Docs](https://github.com/hiiamtzekean/recnexteval/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/hiiamtzekean/recnexteval/)&nbsp;&nbsp;
-[![Python version](https://img.shields.io/badge/python-3.12.5-blue)](https://www.python.org/downloads/)
+[![Docs](https://github.com/hiiamtzekean/recnexteval/actions/workflows/pages/pages-build-deployment/badge.svg)](https://hiiamtzekean.github.io/RecNextEval/)&nbsp;&nbsp;
+[![Python version](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/downloads/)
 
 RecNextEval is an offline Reccomender Systems (RecSys) evaluation toolkit that respects a global timeline.
 The aim is to partition the data into different windows where data is incrementally released for the programmer
@@ -52,5 +52,5 @@ and [repository](https://github.com/hiiamtzekean/recnexteval) on Github.
 If you use this library in any part of your work, please cite the following papers:
 
 ```text
-Ng, T. K. (2024). RecNextEval: a toolkit for offline evaluation of recommender systems. Final Year Project (FYP), Nanyang Technological University, Singapore. https://hdl.handle.net/10356/181114
+Ng, T. K. (2024). streamsight: a toolkit for offline evaluation of recommender systems. Final Year Project (FYP), Nanyang Technological University, Singapore. https://hdl.handle.net/10356/181114
 ```
