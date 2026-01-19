@@ -7,10 +7,9 @@ from typing import ClassVar
 
 import pandas as pd
 
-from recnexteval.matrix import InteractionMatrix
-from recnexteval.preprocessing.filter import Filter, MinItemsPerUser, MinUsersPerItem
-from recnexteval.preprocessing.preprocessor import DataFramePreprocessor
-from recnexteval.utils.path import safe_dir
+from ...matrix import InteractionMatrix
+from ...preprocessing import DataFramePreprocessor, Filter, MinItemsPerUser, MinUsersPerItem
+from ...utils.path import safe_dir
 from ..base import DataFetcher
 from ..config import DatasetConfig
 

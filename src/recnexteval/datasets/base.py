@@ -9,7 +9,7 @@ import pandas as pd
 
 from ..matrix import InteractionMatrix
 from ..models import BaseModel
-from ..preprocessing.filter import Filter, MinItemsPerUser, MinUsersPerItem
+from ..preprocessing import Filter, MinItemsPerUser, MinUsersPerItem
 from ..preprocessing.preprocessor import DataFramePreprocessor
 from ..utils.path import safe_dir
 from .config import DatasetConfig

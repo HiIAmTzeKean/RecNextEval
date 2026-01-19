@@ -25,8 +25,8 @@ Available preprocessor:
 - `DataFramePreprocessor`: Preprocesses pandas DataFrames into InteractionMatrix
 """
 
-from recnexteval.preprocessing.filter import Filter, MinItemsPerUser, MinUsersPerItem
-from recnexteval.preprocessing.preprocessor import DataFramePreprocessor
+from .filter import Filter, MinItemsPerUser, MinUsersPerItem
+from .preprocessor import DataFramePreprocessor
 
 
 __all__ = [

@@ -9,8 +9,8 @@ from typing import Literal
 
 import pandas as pd
 
-from recnexteval.matrix import InteractionMatrix
-from recnexteval.preprocessing.filter import Filter
+from ..matrix import InteractionMatrix
+from .filter import Filter
 
 
 logger = logging.getLogger(__name__)

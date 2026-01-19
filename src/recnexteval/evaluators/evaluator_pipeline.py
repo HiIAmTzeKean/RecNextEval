@@ -3,7 +3,6 @@ from warnings import warn
 
 from tqdm import tqdm
 
-from recnexteval.metrics import Metric
 from recnexteval.registries import METRIC_REGISTRY, MetricEntry
 from recnexteval.settings import EOWSettingError, Setting
 from ..matrix import PredictionMatrix
@@ -90,9 +89,9 @@ class EvaluatorPipeline(EvaluatorBase):
 
         :raises ValueError: If algorithm is not instantiated
         """
-        background_data = self.setting.background_data
-        self.user_item_base.update_known_user_item_base(background_data)
-        training_data = PredictionMatrix.from_interaction_matrix(background_data)
+        training_data = self.setting.training_data
+        self.user_item_base.update_known_user_item_base(training_data)
+        training_data = PredictionMatrix.from_interaction_matrix(training_data)
         training_data.mask_user_item_shape(self.user_item_base.known_shape)
 
         for algo_state in self.algo_state_mgr.values():

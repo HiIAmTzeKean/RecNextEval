@@ -162,7 +162,7 @@ class EvaluatorStreamer(EvaluatorBase):
 
         logger.debug("Preparing evaluator for streaming")
         self._acc = MetricAccumulator()
-        training_data = self.setting.background_data
+        training_data = self.setting.training_data
         # Convert to PredictionMatrix since it's a subclass of InteractionMatrix
         training_data = PredictionMatrix.from_interaction_matrix(training_data)
 
