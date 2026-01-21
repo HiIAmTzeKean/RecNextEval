@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.sparse import csr_matrix
 
 from ...matrix import PredictionMatrix
-from ..base import TopKAlgorithm
+from ..core import TopKAlgorithm
 from ..utils import get_top_K_values
 
 
@@ -21,7 +21,7 @@ class Random(TopKAlgorithm):
         return self
 
     def _predict(self, X: PredictionMatrix) -> csr_matrix:
-        X = X.filter_to_predict()
+        X = X.filter_for_predict()
         known_item_id = X.known_num_item
         # account for the zero indexing
         intended_shape = (X.global_num_user, known_item_id)

@@ -3,7 +3,7 @@ from typing import Self
 
 from scipy.sparse import csr_matrix, hstack, vstack
 
-from ..base import PopularityPaddingMixin, TopKItemSimilarityMatrixAlgorithm
+from ..core import PopularityPaddingMixin, TopKItemSimilarityMatrixAlgorithm
 from .itemknn import ItemKNN
 
 
