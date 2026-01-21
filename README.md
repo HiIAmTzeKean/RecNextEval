@@ -3,7 +3,7 @@
 ![recnexteval-logo](https://github.com/HiIAmTzeKean/recnexteval/raw/master/docs/assets/_static/logo_name.png)
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/recnexteval.svg)](https://pypi.org/project/recnexteval/)&nbsp;&nbsp;
-[![Docs](https://github.com/hiiamtzekean/recnexteval/actions/workflows/pages/pages-build-deployment/badge.svg)](https://hiiamtzekean.github.io/RecNextEval/)&nbsp;&nbsp;
+[![Docs](https://github.com/HiIAmTzeKean/RecNextEval/actions/workflows/mkdocs_deploy.yml/badge.svg)](https://hiiamtzekean.github.io/RecNextEval/)&nbsp;&nbsp;
 [![Python version](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/downloads/)
 
 RecNextEval is an offline Reccomender Systems (RecSys) evaluation toolkit that respects a global timeline.
