@@ -5,7 +5,7 @@ import pytest
 from recnexteval.algorithms import ItemKNNIncremental
 from recnexteval.datasets import Dataset
 from recnexteval.evaluators import EvaluatorStreamerBuilder
-from recnexteval.settings.sliding_window_setting import SlidingWindowSetting
+from recnexteval.settings import SlidingWindowSetting
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ class TestStreamer:
     def test_algorithm_in_different_data_segment_handling(self, setting, k):
         builder = EvaluatorStreamerBuilder()
         builder.add_setting(setting)
-        builder.set_metric_K(k)
+        builder.set_metric_k(k)
         builder.add_metric("PrecisionK")
         evaluator = builder.build()
 

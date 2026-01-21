@@ -1,11 +1,9 @@
-import warnings
 from typing import Any, Dict
 
 import pytest
 
 from recnexteval.matrix import InteractionMatrix, TimestampAttributeMissingError
-from recnexteval.settings.base import Setting
-from recnexteval.settings.single_time_point_setting import SingleTimePointSetting
+from recnexteval.settings import SingleTimePointSetting
 
 
 class TestSingleTimePointSetting:
@@ -81,16 +79,16 @@ class TestSingleTimePointSetting:
         """Test basic split functionality."""
         default_setting.split(matrix)
         assert default_setting.is_ready
-        assert default_setting.background_data is not None
+        assert default_setting.training_data is not None
         assert default_setting.unlabeled_data is not None
         assert default_setting.ground_truth_data is not None
         assert default_setting.t_window == default_setting.t
         assert default_setting.num_split == 1
 
-    def test_background_data_content(self, default_setting: SingleTimePointSetting, matrix: InteractionMatrix) -> None:
+    def test_training_data_content(self, default_setting: SingleTimePointSetting, matrix: InteractionMatrix) -> None:
         """Test background data content after split."""
         default_setting.split(matrix)
-        bg_data = default_setting.background_data
+        bg_data = default_setting.training_data
         assert isinstance(bg_data, InteractionMatrix)
         # Background should contain interactions before background_t
         # Note: Depending on implementation, may include or exclude boundary
@@ -142,7 +140,7 @@ class TestSingleTimePointSetting:
     def test_access_properties_before_split(self, default_setting: SingleTimePointSetting) -> None:
         """Test accessing properties before split raises KeyError."""
         with pytest.raises(KeyError):
-            _ = default_setting.background_data
+            _ = default_setting.training_data
         with pytest.raises(KeyError):
             _ = default_setting.unlabeled_data
         with pytest.raises(KeyError):

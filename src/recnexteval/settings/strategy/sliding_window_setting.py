@@ -1,13 +1,12 @@
 import logging
-from typing import Optional
 from warnings import warn
 
 import numpy as np
 from tqdm import tqdm
 
-from recnexteval.matrix import InteractionMatrix, TimestampAttributeMissingError
-from .base import Setting
-from .splitters import NLastInteractionTimestampSplitter, TimestampSplitter
+from ...matrix import InteractionMatrix, TimestampAttributeMissingError
+from ..base import Setting
+from ..splitters import NLastInteractionTimestampSplitter, TimestampSplitter
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +24,7 @@ class SlidingWindowSetting(Setting):
 
     Core attribute
     ====================
-    - :attr:`background_data`: Data used for training the model. Interval is `[0, background_t)`.
+    - :attr:`training_data`: Data used for training the model. Interval is `[0, background_t)`.
     - :attr:`unlabeled_data`: List of unlabeled data. Each element is a :class:`InteractionMatrix` object of interval `[0, t)`.
     - :attr:`ground_truth_data`: List of ground truth data. Each element is a :class:`InteractionMatrix` object
       of interval `[t, t + window_size)`.
@@ -103,7 +102,7 @@ class SlidingWindowSetting(Setting):
         if self.t_upper:
             data = data.timestamps_lt(self.t_upper)
 
-        self._background_data, _ = self._background_splitter.split(data)
+        self._training_data, _ = self._background_splitter.split(data)
         self._ground_truth_data, self._unlabeled_data, self._t_window, self._incremental_data = (
             [],
             [],

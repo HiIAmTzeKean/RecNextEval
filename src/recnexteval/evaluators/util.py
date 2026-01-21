@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from recnexteval.matrix import InteractionMatrix
+from ..matrix import InteractionMatrix
 
 
 logger = logging.getLogger(__name__)
@@ -43,20 +43,23 @@ class UserItemBaseStatus:
 
     @property
     def known_shape(self) -> tuple[int, int]:
-        """Known shape of the user-item interaction matrix.
+        """Known number of user id and item id.
 
-        This is the shape of the released user/item interaction matrix to the
-        algorithm. This shape follows from assumption in the dataset that
-        ID increment in the order of time.
+        id are zero-indexed and the shape returns the max id + 1.
+
+        Note:
+            `max` is used over `len` as there may be gaps in the id sequence
+            and we are only concerned with the shape of the
+            user-item interaction matrix.
 
         Returns:
             Tuple of (|user|, |item|).
         """
-        return (len(self.known_user), len(self.known_item))
+        return (max(self.known_user) + 1, max(self.known_item) + 1)
 
     @property
     def global_shape(self) -> tuple[int, int]:
-        """Global shape of the user-item interaction matrix.
+        """Global number of user id and item id.
 
         This is the shape of the user-item interaction matrix considering all
         the users and items that has been possibly exposed. The global shape
@@ -68,57 +71,21 @@ class UserItemBaseStatus:
             Tuple of (|user|, |item|).
         """
         return (
-            len(self.known_user) + len(self.unknown_user),
-            len(self.known_item) + len(self.unknown_item),
+            max(max(self.known_user), max(self.unknown_user)) + 1,
+            max(max(self.known_item), max(self.unknown_item)) + 1,
         )
 
-    @property
-    def global_user_ids(self) -> set[int]:
-        """Set of global user ids.
-
-        Returns the set of global user ids. The global user ids are the union of
-        known and unknown user ids.
-
-        Returns:
-            set[int]: Set of global user ids.
-        """
-        return self.known_user.union(self.unknown_user)
-
-    @property
-    def global_item_ids(self) -> set[int]:
-        """Set of global item ids.
-
-        Returns the set of global item ids. The global item ids are the union of
-        known and unknown item ids.
-
-        Returns:
-            set[int]: Set of global item ids.
-        """
-        return self.known_item.union(self.unknown_item)
-
     def update_known_user_item_base(self, data: InteractionMatrix) -> None:
-        """Updates the known user and item set with the data.
-
-        Args:
-            data (InteractionMatrix): Data to update the known user and item set with.
-        """
+        """Updates the known user and item set with the data."""
         self.known_item.update(data.item_ids)
         self.known_user.update(data.user_ids)
 
     def update_unknown_user_item_base(self, data: InteractionMatrix) -> None:
-        """Updates the unknown user and item set with the data.
-
-        Args:
-            data (InteractionMatrix): Data to update the unknown user and item set with.
-        """
-        self.unknown_user = data.user_ids.difference(self.known_user)
-        self.unknown_item = data.item_ids.difference(self.known_item)
+        """Updates the unknown user and item set with the data. """
+        self.unknown_user = data.user_ids - self.known_user
+        self.unknown_item = data.item_ids - self.known_item
 
     def reset_unknown_user_item_base(self) -> None:
-        """Clears the unknown user and item set.
-
-        This method clears the unknown user and item set. This method should be
-        called after the Phase 3 when the data release is done.
-        """
-        self.unknown_user = set()
-        self.unknown_item = set()
+        """Clears the unknown user and item set."""
+        self.unknown_user.clear()
+        self.unknown_item.clear()

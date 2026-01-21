@@ -52,33 +52,18 @@ yield the best performance.
     ItemKNNIncrementalMovieLens100K
     ItemKNNRolling
     ItemKNNStatic
-
-Time-Aware Item Similarity Algorithms
--------------------------------------
-
-This is an extension of the item-based KNN algorithm.
-The time-aware item-based KNN algorithms applies a decay factor to the timestamps of interactions.
-This gives heavier weight to interactions that are more recent.
-
-.. autosummary::
-    :toctree: generated/
-
-    TARSItemKNN
-    TARSItemKNNLiu
-    TARSItemKNNVaz
-    TARSItemKNNDing
 """
 
-from .base import Algorithm
 from .baseline import MostPopular, Random, RecentPopularity
 from .baseline.decay_popularity import DecayPopularity
-from .itemknn import ItemKNN, ItemKNNIncremental, ItemKNNIncrementalMovieLens100K, ItemKNNRolling, ItemKNNStatic
-from .time_aware_item_knn import (
-    TARSItemKNN,
-    TARSItemKNNDing,
-    TARSItemKNNLiu,
-    TARSItemKNNVaz,
+from .core import (
+    Algorithm,
+    IncrementalTrainingMixin,
+    PopularityPaddingMixin,
+    TopKAlgorithm,
+    TopKItemSimilarityMatrixAlgorithm,
 )
+from .itemknn import ItemKNN, ItemKNNIncremental, ItemKNNRolling, ItemKNNStatic
 
 
 __all__ = [
@@ -86,14 +71,13 @@ __all__ = [
     "DecayPopularity",
     "ItemKNN",
     "ItemKNNIncremental",
-    "ItemKNNIncrementalMovieLens100K",
     "ItemKNNRolling",
     "ItemKNNStatic",
     "MostPopular",
     "Random",
     "RecentPopularity",
-    "TARSItemKNN",
-    "TARSItemKNNDing",
-    "TARSItemKNNLiu",
-    "TARSItemKNNVaz",
+    "IncrementalTrainingMixin",
+    "PopularityPaddingMixin",
+    "TopKAlgorithm",
+    "TopKItemSimilarityMatrixAlgorithm",
 ]

@@ -1,7 +1,7 @@
 from scipy.sparse import csr_matrix
 
-from recnexteval.matrix.interaction_matrix import InteractionMatrix
-from recnexteval.utils.util import to_binary
+from ..utils import to_binary
+from .interaction_matrix import InteractionMatrix
 
 
 def to_csr_matrix(X: InteractionMatrix | csr_matrix, binary: bool = False) -> csr_matrix:

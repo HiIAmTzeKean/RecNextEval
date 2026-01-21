@@ -7,10 +7,9 @@ from typing import ClassVar
 
 import pandas as pd
 
-from recnexteval.matrix import InteractionMatrix
-from recnexteval.preprocessing.filter import Filter, MinItemsPerUser, MinUsersPerItem
-from recnexteval.preprocessing.preprocessor import DataFramePreprocessor
-from recnexteval.utils.path import safe_dir
+from ...matrix import InteractionMatrix
+from ...preprocessing import DataFramePreprocessor, Filter, MinItemsPerUser, MinUsersPerItem
+from ...utils.path import safe_dir
 from ..base import DataFetcher
 from ..config import DatasetConfig
 
@@ -54,16 +53,16 @@ class Dataset(DataFetcher):
         if not self.config.user_ix or not self.config.item_ix or not self.config.timestamp_ix:
             raise AttributeError("user_ix, item_ix or timestamp_ix not set in config.")
 
-        logger.debug(
-            f"{self.name} being initialized with '{self.config.default_base_path}' as the base path."
-        )
+        logger.debug(f"{self.name} being initialized with '{self.config.default_base_path}' as the base path.")
 
         if not self.config.default_filename:
             raise ValueError("No filename specified, and no default known.")
 
         self.fetch_metadata = fetch_metadata
         self.preprocessor = DataFramePreprocessor(
-            self.config.item_ix, self.config.user_ix, self.config.timestamp_ix
+            item_ix=self.config.item_ix,
+            user_ix=self.config.user_ix,
+            timestamp_ix=self.config.timestamp_ix,
         )
         self._timestamp_min: int | None = None
         self._timestamp_max: int | None = None
@@ -75,6 +74,7 @@ class Dataset(DataFetcher):
         safe_dir(self.config.default_base_path)
         logger.debug(f"{self.name} is initialized.")
 
+    # TODO change this defintion as property doesnt make sense here
     @property
     def _default_filters(self) -> list[Filter]:
         """The default filters for all datasets
@@ -213,9 +213,7 @@ class Dataset(DataFetcher):
                 self.preprocessor.user_id_mapping,
                 self.preprocessor.item_id_mapping,
             )
-            self._fetch_dataset_metadata(
-                user_id_mapping=user_id_mapping, item_id_mapping=item_id_mapping
-            )
+            self._fetch_dataset_metadata(user_id_mapping=user_id_mapping, item_id_mapping=item_id_mapping)
 
         end = time.time()
         logger.info(f"{self.name} dataset loaded - Took {end - start:.3}s")
@@ -240,9 +238,7 @@ class Dataset(DataFetcher):
         )
 
     @abstractmethod
-    def _fetch_dataset_metadata(
-        self, user_id_mapping: pd.DataFrame, item_id_mapping: pd.DataFrame
-    ) -> None:
+    def _fetch_dataset_metadata(self, user_id_mapping: pd.DataFrame, item_id_mapping: pd.DataFrame) -> None:
         """Fetch metadata for the dataset.
 
         Fetch metadata for the dataset, if available.

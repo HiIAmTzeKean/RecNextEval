@@ -3,8 +3,7 @@ from typing import Any, Dict, List
 import pytest
 
 from recnexteval.matrix import InteractionMatrix, TimestampAttributeMissingError
-from recnexteval.settings.base import Setting
-from recnexteval.settings.sliding_window_setting import SlidingWindowSetting
+from recnexteval.settings import SlidingWindowSetting
 
 
 class TestSlidingWindowSetting:
@@ -91,17 +90,17 @@ class TestSlidingWindowSetting:
         """Test basic split functionality."""
         default_setting.split(matrix)
         assert default_setting.is_ready
-        assert default_setting.background_data is not None
+        assert default_setting.training_data is not None
         assert isinstance(default_setting.unlabeled_data, list)
         assert isinstance(default_setting.ground_truth_data, list)
         assert isinstance(default_setting.incremental_data, list)
         assert isinstance(default_setting.t_window, list)
         assert default_setting.num_split > 1
 
-    def test_background_data_content(self, default_setting: SlidingWindowSetting, matrix: InteractionMatrix) -> None:
+    def test_training_data_content(self, default_setting: SlidingWindowSetting, matrix: InteractionMatrix) -> None:
         """Test background data content after split."""
         default_setting.split(matrix)
-        bg_data = default_setting.background_data
+        bg_data = default_setting.training_data
         assert isinstance(bg_data, InteractionMatrix)
         # Background should contain interactions before background_t
 
@@ -177,7 +176,7 @@ class TestSlidingWindowSetting:
     def test_access_properties_before_split(self, default_setting: SlidingWindowSetting) -> None:
         """Test accessing properties before split raises KeyError."""
         with pytest.raises(KeyError):
-            _ = default_setting.background_data
+            _ = default_setting.training_data
         with pytest.raises(KeyError):
             _ = default_setting.unlabeled_data
         with pytest.raises(KeyError):

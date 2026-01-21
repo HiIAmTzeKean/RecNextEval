@@ -26,7 +26,7 @@ to provide this data, we have included the option to provide the last n interact
 
 Each split produces three data components:
 
-- **background_data**: Data that is used to train the algorithm before the first
+- **training_data**: Data that is used to train the algorithm before the first
   split.
 
 - **unlabeled_data**: Data that is released to the algorithm for prediction.
@@ -52,7 +52,7 @@ Each split produces three data components:
 
 Settings are stateful. Thus, the initialization of the setting object only stores
 the parameters that are passed. Calling of `Setting.split` is necessary
-such that the attributes `Setting.background_data`, `Setting.unlabeled_data`
+such that the attributes `Setting.training_data`, `Setting.unlabeled_data`
 and `Setting.ground_truth_data` are populated.
 
 ```python
@@ -102,15 +102,13 @@ transformations.
 
 from .base import Setting
 from .exception import EOWSettingError
-from .leave_n_out_setting import LeaveNOutSetting
 from .processor import PredictionDataProcessor, Processor
-from .single_time_point_setting import SingleTimePointSetting
-from .sliding_window_setting import SlidingWindowSetting
 from .splitters import (
     NLastInteractionSplitter,
     NLastInteractionTimestampSplitter,
     TimestampSplitter,
 )
+from .strategy import LeaveNOutSetting, SingleTimePointSetting, SlidingWindowSetting
 
 
 __all__ = [

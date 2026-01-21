@@ -171,8 +171,8 @@ from .builder import (
     EvaluatorPipelineBuilder,
     EvaluatorStreamerBuilder,
 )
-from .evaluator_pipeline import EvaluatorPipeline
-from .evaluator_stream import EvaluatorStreamer
+from .pipeline import EvaluatorPipeline
+from .stream import EvaluatorStreamer
 from .util import MetricLevelEnum, UserItemBaseStatus
 
 

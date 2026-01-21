@@ -18,7 +18,7 @@ class Setting(BaseModel, ParamMixin):
     """Base class for defining an evaluation setting.
 
     Core Attributes:
-    - background_data: Data used for inital training of model. Interval is [0, background_t).
+    - training_data: Data used for inital training of model. Interval is [0, background_t).
     - unlabeled_data: List of unlabeled data. Each element is an InteractionMatrix
         object of interval [0, t).
     - ground_truth_data: List of ground truth data. Each element is an
@@ -28,7 +28,7 @@ class Setting(BaseModel, ParamMixin):
         Unique to SlidingWindowSetting.
     - data_timestamp_limit: List of timestamps that the splitter will slide over.
 
-    We will use `background_data` as the initial training set, `incremental_data` as the data
+    We will use `training_data` as the initial training set, `incremental_data` as the data
     to incrementally update the model. However, for public methods, we will refer to both as
     `training_data` to avoid confusion.
 
@@ -58,7 +58,7 @@ class Setting(BaseModel, ParamMixin):
         """Data containing the ground truth interactions to :attr:`_unlabeled_data`. If :class:`SlidingWindowSetting`, then it will be a list of :class:`InteractionMatrix`."""
         self._incremental_data: list[InteractionMatrix]
         """Data that is used to incrementally update the model. Unique to :class:`SlidingWindowSetting`."""
-        self._background_data: InteractionMatrix
+        self._training_data: InteractionMatrix
         """Data used as the initial set of interactions to train the model."""
         self._t_window: Union[None, int, list[int]]
         """This is the upper timestamp of the window in split. The actual interaction might have a smaller timestamp value than this because this will is the t cut off value."""
@@ -96,7 +96,7 @@ class Setting(BaseModel, ParamMixin):
         """Split data according to the setting.
 
         This abstract method must be implemented by concrete setting classes
-        to split data into background_data, ground_truth_data, and unlabeled_data.
+        to split data into training_data, ground_truth_data, and unlabeled_data.
 
         Args:
             data: Interaction matrix to be split.
@@ -106,7 +106,7 @@ class Setting(BaseModel, ParamMixin):
         """Split data according to the setting.
 
         Calling this method changes the state of the setting object to be ready
-        for evaluation. The method splits data into background_data, ground_truth_data,
+        for evaluation. The method splits data into training_data, ground_truth_data,
         and unlabeled_data.
 
         Note:
@@ -169,14 +169,14 @@ class Setting(BaseModel, ParamMixin):
         return self._sliding_window_setting
 
     @property
-    def background_data(self) -> InteractionMatrix:
+    def training_data(self) -> InteractionMatrix:
         """Get background data for initial model training.
 
         Returns:
             InteractionMatrix of training interactions.
         """
         self._check_split_complete()
-        return self._background_data
+        return self._training_data
 
     @property
     def t_window(self) -> Union[None, int, list[int]]:
@@ -247,7 +247,7 @@ class Setting(BaseModel, ParamMixin):
         Makes sure all expected attributes are set.
         """
         logger.debug("Checking split attributes.")
-        assert hasattr(self, "_background_data") and self._background_data is not None
+        assert hasattr(self, "_training_data") and self._training_data is not None
 
         assert (hasattr(self, "_unlabeled_data") and self._unlabeled_data is not None) or (
             hasattr(self, "_unlabeled_data") and self._unlabeled_data is not None
@@ -279,7 +279,7 @@ class Setting(BaseModel, ParamMixin):
                 return True
             return False
 
-        n_background = self._background_data.num_interactions
+        n_background = self._training_data.num_interactions
         # check_empty("Background data", n_background)
         check_ratio("Background data", n_background, self._num_full_interactions, 0.05)
 

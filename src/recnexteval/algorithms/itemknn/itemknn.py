@@ -5,7 +5,7 @@ from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 
 from recnexteval.matrix import ItemUserBasedEnum, PredictionMatrix
-from ..base import PopularityPaddingMixin, TopKItemSimilarityMatrixAlgorithm
+from ..core import PopularityPaddingMixin, TopKItemSimilarityMatrixAlgorithm
 from ..utils import get_top_K_values
 
 
@@ -67,7 +67,7 @@ class ItemKNN(TopKItemSimilarityMatrixAlgorithm, PopularityPaddingMixin):
         return self
 
     def _predict(self, X: PredictionMatrix) -> csr_matrix:
-        predict_ui_df = X.get_prediction_data()._df  # noqa: SLF001
+        predict_ui_df = X.filter_for_predict()._df  # noqa: SLF001
 
         # create a boolean series that is true for index in predict_ui_df.uid
         uid_to_predict = predict_ui_df[predict_ui_df.uid < self.X_.shape[0]].uid.unique()
@@ -81,7 +81,7 @@ class ItemKNN(TopKItemSimilarityMatrixAlgorithm, PopularityPaddingMixin):
         if not isinstance(scores, csr_matrix):
             scores = csr_matrix(scores)
 
-        intended_shape = (X.max_global_user_id, X.max_global_item_id)
+        intended_shape = (X.global_num_user, X.global_num_item)
 
         if scores.shape == intended_shape:
             return scores
@@ -100,17 +100,15 @@ class ItemKNN(TopKItemSimilarityMatrixAlgorithm, PopularityPaddingMixin):
 
         # handle case 2
         if self.pad_with_popularity:
-            scores = self._pad_uknown_uid_with_popularity_strategy(
+            scores = self._pad_unknown_uid_with_popularity_strategy(
                 X_pred=scores,
                 intended_shape=intended_shape,
                 predict_ui_df=predict_ui_df,
             )
         else:
-            # current_shape = (X.max_known_user_id, X.max_known_item_id)
             scores = self._pad_unknown_uid_with_random_strategy(
                 X_pred=scores,
                 current_shape=scores.shape,
-                # current_shape=current_shape,
                 intended_shape=intended_shape,
                 predict_ui_df=predict_ui_df,
             )

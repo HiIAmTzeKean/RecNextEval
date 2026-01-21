@@ -3,9 +3,9 @@ from warnings import warn
 
 import numpy as np
 
-from recnexteval.matrix import InteractionMatrix, TimestampAttributeMissingError
-from .base import Setting
-from .splitters import (
+from ...matrix import InteractionMatrix, TimestampAttributeMissingError
+from ..base import Setting
+from ..splitters import (
     NLastInteractionTimestampSplitter,
     TimestampSplitter,
 )
@@ -93,7 +93,7 @@ class SingleTimePointSetting(Setting):
                 " in the data. No data will be in the training set."
             )
 
-        self._background_data, _ = self._background_splitter.split(data)
+        self._training_data, _ = self._background_splitter.split(data)
         past_interaction, future_interaction = self._splitter.split(data)
         self._unlabeled_data, self._ground_truth_data = self.prediction_data_processor.process(
             past_interaction=past_interaction,
@@ -101,7 +101,7 @@ class SingleTimePointSetting(Setting):
             top_K=self.top_K,
         )
 
-        if len(self._background_data) == 0:
+        if len(self._training_data) == 0:
             logger.info("Background data is empty after splitting at time %s", self.t)
         if len(self._unlabeled_data) == 0:
             logger.info("Unlabeled data is empty after splitting at time %s", self.t)

@@ -4,7 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
-from recnexteval.metrics import Metric
+from ..metrics import Metric
 from .util import MetricLevelEnum
 
 
@@ -19,16 +19,15 @@ class MetricAccumulator:
         return self.acc[key]
 
     def add(self, metric: Metric, algorithm_name: str) -> None:
-        """Add a metric to the accumulator
+        """Add a metric to the accumulator.
 
-        Takes a :class:`Metric` object and adds it under the algorithm name. If
+        Takes a Metric object and adds it under the algorithm name. If
         the specified metric already exists for the algorithm, it will be
         overwritten with the new metric.
 
-        :param metric: Metric to store
-        :type metric: Metric
-        :param algorithm_name: Name of the algorithm
-        :type algorithm_name: str
+        Args:
+            metric: Metric to store.
+            algorithm_name: Name of the algorithm.
         """
         if metric.identifier in self.acc[algorithm_name]:
             logger.warning(
@@ -77,12 +76,10 @@ class MetricAccumulator:
         return results
 
     def df_user_level_metric(self) -> pd.DataFrame:
-        """User metric across all timestamps
+        """Get user-level metrics across all timestamps.
 
-        Computation of metrics evaluated on the user level
-
-        :return: _description_
-        :rtype: pd.DataFrame
+        Returns:
+            DataFrame with user-level metric computations.
         """
         df = pd.DataFrame.from_dict(self.user_level_metrics, orient="index").explode(
             ["user_id", "score"]
@@ -100,10 +97,10 @@ class MetricAccumulator:
         return df
 
     def df_macro_level_metric(self) -> pd.DataFrame:
-        """Macro metric across all timestamps
+        """Get macro-level metrics across all timestamps.
 
-        :return: _description_
-        :rtype: pd.DataFrame
+        Returns:
+            DataFrame with macro-level metric computations.
         """
         df = pd.DataFrame.from_dict(self.window_level_metrics, orient="index").explode(
             ["score", "num_user"]
@@ -115,10 +112,10 @@ class MetricAccumulator:
         return result
 
     def df_micro_level_metric(self) -> pd.DataFrame:
-        """Micro metric across all timestamps
+        """Get micro-level metrics across all timestamps.
 
-        :return: _description_
-        :rtype: pd.DataFrame
+        Returns:
+            DataFrame with micro-level metric computations.
         """
         df = pd.DataFrame.from_dict(self.user_level_metrics, orient="index").explode(
             ["user_id", "score"]
@@ -135,19 +132,18 @@ class MetricAccumulator:
         filter_algo: Optional[str] = None,
         level: MetricLevelEnum = MetricLevelEnum.MACRO,
     ) -> pd.DataFrame:
-        """Dataframe representation of the metric
+        """Get DataFrame representation of metrics.
 
-        Returns a dataframe representation of the metric. The dataframe can be
-        filtered based on the algorithm name and the timestamp.
+        Returns a DataFrame representation of the metrics. The DataFrame can be
+        filtered based on algorithm name and timestamp.
 
-        :param filter_timestamp: Timestamp value to filter on, defaults to None
-        :type filter_timestamp: Optional[int], optional
-        :param filter_algo: Algorithm name to filter on, defaults to None
-        :type filter_algo: Optional[str], optional
-        :param level: Level of the metric to compute, defaults to MetricLevelEnum.MACRO
-        :type level: MetricLevelEnum, optional
-        :return: Dataframe representation of the metric
-        :rtype: pd.DataFrame
+        Args:
+            filter_timestamp: Timestamp value to filter on. Defaults to None.
+            filter_algo: Algorithm name to filter on. Defaults to None.
+            level: Level of the metric to compute. Defaults to MetricLevelEnum.MACRO.
+
+        Returns:
+            DataFrame representation of the metrics.
         """
         if level == MetricLevelEnum.MACRO:
             df = self.df_macro_level_metric()
