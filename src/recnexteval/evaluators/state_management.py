@@ -169,6 +169,8 @@ class AlgorithmStateManager:
             return False, "Algorithm has already requested data for this window"
         if state == AlgorithmStateEnum.READY:
             return True, ""
+        if state == AlgorithmStateEnum.RUNNING:
+            return True, ""
 
         return False, f"Unknown state {state}"
 
@@ -228,7 +230,7 @@ class AlgorithmStateManager:
             # old_state: [list of valid new_states]
             AlgorithmStateEnum.NEW: [AlgorithmStateEnum.READY, AlgorithmStateEnum.COMPLETED],
             AlgorithmStateEnum.READY: [AlgorithmStateEnum.RUNNING],
-            AlgorithmStateEnum.RUNNING: [AlgorithmStateEnum.PREDICTED],
+            AlgorithmStateEnum.RUNNING: [AlgorithmStateEnum.RUNNING, AlgorithmStateEnum.PREDICTED],
             AlgorithmStateEnum.PREDICTED: [AlgorithmStateEnum.READY, AlgorithmStateEnum.COMPLETED],
             AlgorithmStateEnum.COMPLETED: [],
         }

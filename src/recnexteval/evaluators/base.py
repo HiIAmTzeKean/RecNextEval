@@ -6,7 +6,7 @@ import pandas as pd
 from scipy.sparse import csr_matrix
 
 from ..matrix import PredictionMatrix
-from ..registries import MetricEntry
+from ..registries import METRIC_REGISTRY, MetricEntry
 from ..settings import EOWSettingError, Setting
 from .accumulator import MetricAccumulator
 from .util import MetricLevelEnum, UserItemBaseStatus
@@ -46,18 +46,15 @@ class EvaluatorBase:
         if self._run_step == 0:
             logger.debug("First step, getting training data")
             training_data = self.setting.training_data
-            self.user_item_base.update_known_user_item_base(training_data)
-            training_data = PredictionMatrix.from_interaction_matrix(training_data)
-            training_data.mask_user_item_shape(self.user_item_base.known_shape)
         else:
             logger.debug("Not first step, getting previous ground truth data as training data")
             training_data = self.setting.get_split_at(self._run_step).incremental
             if training_data is None:
                 raise ValueError("Incremental data is None in sliding window setting")
             self.user_item_base.reset_unknown_user_item_base()
-            self.user_item_base.update_known_user_item_base(training_data)
-            training_data = PredictionMatrix.from_interaction_matrix(training_data)
-            training_data.mask_user_item_shape(self.user_item_base.known_shape)
+        self.user_item_base.update_known_user_item_base(training_data)
+        training_data = PredictionMatrix.from_interaction_matrix(training_data)
+        training_data.mask_user_item_shape(shape=self.user_item_base.known_shape)
         return training_data
 
     def _get_evaluation_data(self) -> tuple[PredictionMatrix, PredictionMatrix, int]:
@@ -93,53 +90,52 @@ class EvaluatorBase:
             raise EOWSettingError("There is no more data to be processed, EOW reached")
 
         self.user_item_base.update_unknown_user_item_base(ground_truth_data)
+        mask_shape = self.user_item_base.global_shape
 
-        mask_shape = (self.user_item_base.known_shape[0], self.user_item_base.known_shape[1])
-        if not self.ignore_unknown_user:
-            mask_shape = (self.user_item_base.global_shape[0], mask_shape[1])
-
-        unlabeled_data.mask_user_item_shape(
-            shape=mask_shape
-        )
-        ground_truth_data.mask_user_item_shape(
-            shape=mask_shape,
-            drop_unknown_item=self.ignore_unknown_item,
-            inherit_max_id=True,  # Ensures that shape of ground truth contains all user id that appears globally
-        )
-        # get the index of ground_truth_data._df
         if self.ignore_unknown_item:
-            unlabeled_data._df = unlabeled_data._df.loc[ground_truth_data._df.index]
+            # get the unknown items from our knowledge base
+            # drop all rows with unknown items in ground truth
+            # drop corresponding rows in unlabeled data
+            ground_truth_data = ground_truth_data.items_in(self.user_item_base.known_item)
+            mask_shape = (mask_shape[0], self.user_item_base.known_shape[1])
+        if self.ignore_unknown_user:
+            # get the unknown users from our knowledge base
+            # drop all columns with unknown users in ground truth
+            # drop corresponding columns in unlabeled data
+            ground_truth_data = ground_truth_data.users_in(self.user_item_base.known_user)
+            mask_shape = (self.user_item_base.known_shape[0], mask_shape[1])
+        unlabeled_data._df = unlabeled_data._df.loc[ground_truth_data._df.index]
+
+        unlabeled_data.mask_user_item_shape(shape=mask_shape)
+        ground_truth_data.mask_user_item_shape(shape=mask_shape)
         return unlabeled_data, ground_truth_data, self._current_timestamp
 
-    def _prediction_unknown_item_handler(
-        self, y_true: csr_matrix, y_pred: csr_matrix
-    ) -> csr_matrix:
-        """Handle shape difference due to unknown items in ground truth matrix."""
-        # X_true_shape = y_true.shape
-        # if y_pred.shape != X_true_shape:
-        #     logger.warning("Prediction matrix shape %s is different from ground truth matrix shape %s.", y_pred.shape, X_true_shape)
-        #     # We cannot expect the algorithm to predict an unknown item, so we
-        #     # only check user dimension
-        #     # if y_pred.shape[0] < X_true_shape[0] and not self.ignore_unknown_user:  # type: ignore
-        #     #     raise ValueError(
-        #     #         "Prediction matrix shape, user dimension, is less than the ground truth matrix shape."
-        #     #     )
+    def _add_metric_results_for_prediction(
+            self,
+            ground_truth_data: PredictionMatrix,
+            y_pred: csr_matrix,
+            algorithm_name: str,
+        ) -> None:
+        for metric_entry in self.metric_entries:
+            metric_cls = METRIC_REGISTRY.get(metric_entry.name)
+            params = {
+                'timestamp_limit': self._current_timestamp,
+                'user_id_sequence_array': ground_truth_data.user_id_sequence_array,
+                'user_item_shape': ground_truth_data.user_item_shape,
+            }
+            if metric_entry.K is not None:
+                params['K'] = metric_entry.K
 
-        #     if not self.ignore_unknown_item:
-        #         # prediction matrix would not contain unknown item ID
-        #         # update the shape of the prediction matrix to include the ID
-        #         y_pred = csr_matrix(
-        #             (y_pred.data, y_pred.indices, y_pred.indptr),
-        #             shape=(y_pred.shape[0], X_true_shape[1]),  # type: ignore
-        #         )
+            metric = metric_cls(**params)
+            metric.calculate(y_true=ground_truth_data.item_interaction_sequence_matrix, y_pred=y_pred)
+            self._acc.add(metric=metric, algorithm_name=algorithm_name)
 
-            # shapes might not be the same in the case of dropping unknowns
-            # from the ground truth data. We ensure that the same unknowns
-            # are dropped from the predictions
-            # if self.ignore_unknown_user:
-            #     y_pred = y_pred[: X_true_shape[0], :]  # type: ignore
-            # if self.ignore_unknown_item:
-            #     y_pred = y_pred[:, : X_true_shape[1]]  # type: ignore
+    def _prediction_unknown_item_handler(self, y_true: csr_matrix, y_pred: csr_matrix) -> csr_matrix:
+        """Handle shape difference due to unknown items in ground truth matrix.
+
+        Extends the number of columns in the prediction matrix to match the ground truth. This is equivalent
+        to submitting zero prediction for unknown items.
+        """
         if y_pred.shape[1] == y_true.shape[1]:
             return y_pred
         logger.warning(

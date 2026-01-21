@@ -6,9 +6,6 @@ from scipy.sparse import csr_matrix
 
 from ...algorithms import Algorithm
 from ...matrix import InteractionMatrix, PredictionMatrix
-from ...registries import (
-    METRIC_REGISTRY,
-)
 from ...settings import EOWSettingError
 from ..accumulator import MetricAccumulator
 from ..base import EvaluatorBase
@@ -97,8 +94,8 @@ class EvaluatorStreamer(EvaluatorBase):
         Raises:
             ValueError: If the stream has already started.
         """
+        self._assert_state(expected=EvaluatorState.INITIALIZED, error_msg="Stream has already started")
         self.setting.restore()
-
         logger.debug("Preparing evaluator for streaming")
         self._acc = MetricAccumulator()
         self.load_next_window()
@@ -125,23 +122,12 @@ class EvaluatorStreamer(EvaluatorBase):
         logger.debug(f"Algorithm {algo_id} registered")
         return algo_id
 
-    def get_algorithm_state(self, algo_id: UUID) -> AlgorithmStateEnum:
-        """Get the state of the algorithm.
-
-        Args:
-            algo_id: Unique identifier of the algorithm.
-
-        Returns:
-            The state of the algorithm.
-        """
-        return self._algo_state_mgr[algo_id].state
+    def get_algorithm_state(self, algorithm_id: UUID) -> AlgorithmStateEnum:
+        """Get the state of the algorithm."""
+        return self._algo_state_mgr[algorithm_id].state
 
     def get_all_algorithm_status(self) -> dict[str, AlgorithmStateEnum]:
-        """Get the status of all algorithms.
-
-        Returns:
-            The status of all algorithms.
-        """
+        """Get the status of all algorithms."""
         return self._algo_state_mgr.all_algo_states()
 
     def load_next_window(self) -> None:
@@ -184,8 +170,8 @@ class EvaluatorStreamer(EvaluatorBase):
             raise PermissionError(f"Cannot request data: {reason}")
         # TODO handle case when algo is ready after submitting prediction, but current timestamp has not changed, meaning algo is requesting same data again
         self._algo_state_mgr.transition(
-            algo_id,
-            AlgorithmStateEnum.RUNNING,
+            algo_id=algo_id,
+            new_state=AlgorithmStateEnum.RUNNING,
             data_segment=self._current_timestamp,
         )
 
@@ -222,46 +208,23 @@ class EvaluatorStreamer(EvaluatorBase):
         if not can_submit:
             raise PermissionError(f"Cannot submit prediction: {reason}")
 
-        self._evaluate_algo_pred(algo_id=algo_id, y_pred=X_pred)
+        self._evaluate_algo_pred(algorithm_id=algo_id, y_pred=X_pred)
         self._algo_state_mgr.transition(
-            algo_id,
-            AlgorithmStateEnum.PREDICTED,
+            algo_id=algo_id,
+            new_state=AlgorithmStateEnum.PREDICTED,
         )
 
-    def _evaluate_algo_pred(self, algo_id: UUID, y_pred: csr_matrix) -> None:
-        """Evaluate the prediction for algorithm.
+    def _evaluate_algo_pred(self, algorithm_id: UUID, y_pred: csr_matrix) -> None:
+        """Evaluate the prediction for algorithm."""
+        y_true = self._ground_truth_data_cache.item_interaction_sequence_matrix
 
-        Given the prediction and the algorithm ID, the method will evaluate the
-        prediction using the metrics specified in the evaluator. The prediction
-        of the algorithm is compared to the ground truth data currently cached.
+        if not self.ignore_unknown_item:
+            y_pred = self._prediction_unknown_item_handler(y_true=y_true, y_pred=y_pred)
+        algorithm_name = self._algo_state_mgr.get_algorithm_identifier(algo_id=algorithm_id)
+        self._add_metric_results_for_prediction(
+            ground_truth_data=self._ground_truth_data_cache,
+            y_pred=y_pred,
+            algorithm_name=algorithm_name,
+        )
 
-        The evaluation results will be stored in the micro and macro accumulators
-        which will later be used to calculate the final evaluation results.
-
-        Args:
-            algo_id: The unique identifier of the algorithm.
-            y_pred: The prediction of the algorithm.
-        """
-        # get top k ground truth interactions
-        y_true = self._ground_truth_data_cache
-        y_true = y_true.item_interaction_sequence_matrix
-
-        y_pred = self._prediction_unknown_item_handler(y_true=y_true, y_pred=y_pred)
-        algorithm_name = self._algo_state_mgr.get_algorithm_identifier(algo_id=algo_id)
-
-        # evaluate the prediction
-        for metric_entry in self.metric_entries:
-            metric_cls = METRIC_REGISTRY.get(metric_entry.name)
-            params = {
-                'timestamp_limit': self._current_timestamp,
-                'user_id_sequence_array': self._ground_truth_data_cache.user_id_sequence_array,
-                'user_item_shape': self._ground_truth_data_cache.user_item_shape,
-            }
-            if metric_entry.K is not None:
-                params['K'] = metric_entry.K
-
-            metric = metric_cls(**params)
-            metric.calculate(y_true, y_pred)
-            self._acc.add(metric=metric, algorithm_name=algorithm_name)
-
-        logger.debug(f"Prediction evaluated for algorithm {algo_id} complete")
+        logger.debug(f"Prediction evaluated for algorithm {algorithm_id} complete")

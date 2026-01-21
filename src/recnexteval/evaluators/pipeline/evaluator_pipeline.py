@@ -4,8 +4,6 @@ from warnings import warn
 
 from tqdm import tqdm
 
-from ...matrix import PredictionMatrix
-from ...registries import METRIC_REGISTRY
 from ...settings import EOWSettingError
 from ..accumulator import MetricAccumulator
 from ..base import EvaluatorBase
@@ -21,15 +19,8 @@ class EvaluatorPipeline(EvaluatorBase):
 
     algo_state_mgr: AlgorithmStateManager
 
-    def _ready_algo(self) -> None:
-        training_data = self._get_training_data()
-
-        for algo_state in self.algo_state_mgr.values():
-            algo_state.algorithm_ptr.fit(X=training_data)
-
     def _ready_evaluator(self) -> None:
-        logger.info("Phase 1: Preparing the evaluator...")
-        self._ready_algo()
+        self._data_release_step()
         logger.debug("Algorithms trained with background data...")
 
         self._acc = MetricAccumulator()
@@ -41,43 +32,33 @@ class EvaluatorPipeline(EvaluatorBase):
     def _evaluate_step(self) -> None:
         logger.info("Phase 2: Evaluating the algorithms...")
         try:
-            unlabeled_data, ground_truth_data, current_timestamp = self._get_evaluation_data()
+            unlabeled_data, ground_truth_data, _ = self._get_evaluation_data()
         except EOWSettingError as e:
             raise e
 
         # get the top k interaction per user
         # X_true = ground_truth_data.get_users_n_first_interaction(self.metric_k)
-        X_true = ground_truth_data.item_interaction_sequence_matrix
+        y_true = ground_truth_data.item_interaction_sequence_matrix
         for algo_state in self.algo_state_mgr.values():
-            X_pred = algo_state.algorithm_ptr.predict(unlabeled_data)
-            logger.debug("Shape of prediction matrix: %s", X_pred.shape)
-            logger.debug("Shape of ground truth matrix: %s", X_true.shape)
-            X_pred = self._prediction_unknown_item_handler(X_true, X_pred)
+            y_pred = algo_state.algorithm_ptr.predict(unlabeled_data)
+            logger.debug("Shape of prediction matrix: %s", y_pred.shape)
+            logger.debug("Shape of ground truth matrix: %s", y_true.shape)
 
-            for metric_entry in self.metric_entries:
-                metric_cls = METRIC_REGISTRY.get(metric_entry.name)
-                params = {
-                    'timestamp_limit': current_timestamp,
-                    'user_id_sequence_array': ground_truth_data.user_id_sequence_array,
-                    'user_item_shape': ground_truth_data.user_item_shape,
-                }
-                if metric_entry.K is not None:
-                    params['K'] = metric_entry.K
-                metric = metric_cls(**params)
-                metric.calculate(X_true, X_pred)
-                self._acc.add(
-                    metric=metric,
-                    algorithm_name=self.algo_state_mgr.get_algorithm_identifier(algo_state.algorithm_uuid),
-                )
+            if not self.ignore_unknown_item:
+                y_pred = self._prediction_unknown_item_handler(y_true=y_true, y_pred=y_pred)
+
+            self._add_metric_results_for_prediction(
+                ground_truth_data=ground_truth_data,
+                y_pred=y_pred,
+                algorithm_name=self.algo_state_mgr.get_algorithm_identifier(algo_id=algo_state.algorithm_uuid),
+            )
 
     def _data_release_step(self) -> None:
-        if not self.setting.is_sliding_window_setting:
+        if self._run_step != 0 and not self.setting.is_sliding_window_setting:
             return
-        logger.info("Phase 3: Releasing the data...")
-
-        incremental_data = self._get_training_data()
+        training_data = self._get_training_data()
         for algo_state in self.algo_state_mgr.values():
-            algo_state.algorithm_ptr.fit(incremental_data)
+            algo_state.algorithm_ptr.fit(training_data)
 
     def reset(self) -> None:
         """Reset the evaluator to initial state."""

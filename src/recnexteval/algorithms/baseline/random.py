@@ -22,8 +22,9 @@ class Random(TopKAlgorithm):
 
     def _predict(self, X: PredictionMatrix) -> csr_matrix:
         X = X.filter_to_predict()
-        known_item_id = X.max_known_item_id
-        intended_shape = (X.max_global_user_id, known_item_id)
+        known_item_id = X.known_num_item
+        # account for the zero indexing
+        intended_shape = (X.global_num_user, known_item_id)
 
         to_predict = pd.Series(list(X.user_ids))
         to_predict = to_predict.sort_values(ignore_index=True)

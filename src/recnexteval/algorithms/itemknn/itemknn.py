@@ -81,7 +81,7 @@ class ItemKNN(TopKItemSimilarityMatrixAlgorithm, PopularityPaddingMixin):
         if not isinstance(scores, csr_matrix):
             scores = csr_matrix(scores)
 
-        intended_shape = (X.max_global_user_id, X.max_global_item_id)
+        intended_shape = (X.global_num_user, X.global_num_item)
 
         if scores.shape == intended_shape:
             return scores

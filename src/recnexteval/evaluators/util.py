@@ -43,16 +43,11 @@ class UserItemBaseStatus:
 
     @property
     def known_shape(self) -> tuple[int, int]:
-        """Known shape of the user-item interaction matrix.
+        """Known number of user id and item id.
 
-        This is the shape of the released user/item interaction matrix to the
-        algorithm. This shape follows from assumption in the dataset that
-        ID increment in the order of time.
-
-        Returns:
-            Tuple of (|user|, |item|).
+        ID are zero-indexed and the shape returns the max id + 1.
         """
-        return (len(self.known_user), len(self.known_item))
+        return (max(self.known_user) + 1, max(self.known_item) + 1)
 
     @property
     def global_shape(self) -> tuple[int, int]:
@@ -68,8 +63,8 @@ class UserItemBaseStatus:
             Tuple of (|user|, |item|).
         """
         return (
-            len(self.known_user) + len(self.unknown_user),
-            len(self.known_item) + len(self.unknown_item),
+            max(max(self.known_user), max(self.unknown_user)) + 1,
+            max(max(self.known_item), max(self.unknown_item)) + 1,
         )
 
     @property
@@ -82,7 +77,7 @@ class UserItemBaseStatus:
         Returns:
             set[int]: Set of global user ids.
         """
-        return self.known_user.union(self.unknown_user)
+        return self.known_user | self.unknown_user
 
     @property
     def global_item_ids(self) -> set[int]:
@@ -94,7 +89,7 @@ class UserItemBaseStatus:
         Returns:
             set[int]: Set of global item ids.
         """
-        return self.known_item.union(self.unknown_item)
+        return self.known_item | self.unknown_item
 
     def update_known_user_item_base(self, data: InteractionMatrix) -> None:
         """Updates the known user and item set with the data.
@@ -111,8 +106,8 @@ class UserItemBaseStatus:
         Args:
             data (InteractionMatrix): Data to update the unknown user and item set with.
         """
-        self.unknown_user = data.user_ids.difference(self.known_user)
-        self.unknown_item = data.item_ids.difference(self.known_item)
+        self.unknown_user = data.user_ids - self.known_user
+        self.unknown_item = data.item_ids - self.known_item
 
     def reset_unknown_user_item_base(self) -> None:
         """Clears the unknown user and item set.
@@ -120,5 +115,5 @@ class UserItemBaseStatus:
         This method clears the unknown user and item set. This method should be
         called after the Phase 3 when the data release is done.
         """
-        self.unknown_user = set()
-        self.unknown_item = set()
+        self.unknown_user.clear()
+        self.unknown_item.clear()

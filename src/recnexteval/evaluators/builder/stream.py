@@ -17,7 +17,7 @@ class EvaluatorStreamerBuilder(Builder):
     errors when the evaluator is executed.
     """
 
-    ignore_unknown_user: bool = False
+    ignore_unknown_user: bool = True
     """Ignore unknown user in the evaluation"""
     ignore_unknown_item: bool = False
     """Ignore unknown item in the evaluation"""

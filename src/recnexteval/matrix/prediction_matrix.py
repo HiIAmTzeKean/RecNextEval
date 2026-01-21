@@ -26,7 +26,7 @@ class PredictionMatrix(InteractionMatrix):
             item_ix=im.ITEM_IX,
             user_ix=im.USER_IX,
             timestamp_ix=im.TIMESTAMP_IX,
-            shape=getattr(im, 'shape', None),
+            shape=getattr(im, "shape", None),
             skip_df_processing=True,
         )
 
@@ -38,13 +38,7 @@ class PredictionMatrix(InteractionMatrix):
         """
         return self.items_in({-1})
 
-    def mask_user_item_shape(
-        self,
-        shape: tuple[int, int],
-        drop_unknown_user: bool = False,
-        drop_unknown_item: bool = False,
-        inherit_max_id: bool = False,
-    ) -> None:
+    def mask_user_item_shape(self, shape: tuple[int, int]) -> None:
         """Masks global user and item ID.
 
         To ensure released matrix released to the models only contains data
@@ -99,31 +93,17 @@ class PredictionMatrix(InteractionMatrix):
         """
 
         logger.debug(
-            f"(user x item) shape defined is {shape}. "
-            f"Shape of dataframe stored in matrix was {self._df.shape} before masking"
+            f"(user x item) shape defined is {shape}. Shape of dataframe stored in matrix was {self._df.shape} before masking"
         )
-        if drop_unknown_user:
-            logger.debug("Dropping unknown users from interaction matrix based on defined shape")
-            self._df = pd.DataFrame(self._df[self._df[InteractionMatrix.USER_IX] < shape[0]])
-        if drop_unknown_item:
-            logger.debug("Dropping unknown items from interaction matrix based on defined shape")
-            self._df = pd.DataFrame(self._df[self._df[InteractionMatrix.ITEM_IX] < shape[1]])
-        logger.debug(f"Shape of dataframe stored in matrix is now {self._df.shape} after masking")
-
-        if inherit_max_id:
-            # we are only concerned about the absolute maximum id in the data regardless if its unknown
-            known_user = int(self._df[InteractionMatrix.USER_IX].max())
-            known_item = int(self._df[InteractionMatrix.ITEM_IX].max())
-            # + 1 as id starts from 0
-            self.user_item_shape = (max(shape[0], known_user + 1), max(shape[1], known_item + 1))
-        else:
-            self.user_item_shape = shape
+        self.user_item_shape = shape
         logger.debug(f"Final (user x item) shape defined is {self.user_item_shape}")
         self._check_user_item_shape()
 
     def _check_user_item_shape(self) -> None:
         if not hasattr(self, "user_item_shape"):
-            raise AttributeError("InteractionMatrix has no `user_item_shape` attribute. Please call mask_shape() first.")
+            raise AttributeError(
+                "InteractionMatrix has no `user_item_shape` attribute. Please call mask_shape() first."
+            )
         if self.user_item_shape[0] is None or self.user_item_shape[1] is None:
             raise ValueError("Shape must be defined.")
 
