@@ -45,13 +45,21 @@ class UserItemBaseStatus:
     def known_shape(self) -> tuple[int, int]:
         """Known number of user id and item id.
 
-        ID are zero-indexed and the shape returns the max id + 1.
+        id are zero-indexed and the shape returns the max id + 1.
+
+        Note:
+            `max` is used over `len` as there may be gaps in the id sequence
+            and we are only concerned with the shape of the
+            user-item interaction matrix.
+
+        Returns:
+            Tuple of (|user|, |item|).
         """
         return (max(self.known_user) + 1, max(self.known_item) + 1)
 
     @property
     def global_shape(self) -> tuple[int, int]:
-        """Global shape of the user-item interaction matrix.
+        """Global number of user id and item id.
 
         This is the shape of the user-item interaction matrix considering all
         the users and items that has been possibly exposed. The global shape
@@ -66,30 +74,6 @@ class UserItemBaseStatus:
             max(max(self.known_user), max(self.unknown_user)) + 1,
             max(max(self.known_item), max(self.unknown_item)) + 1,
         )
-
-    @property
-    def global_user_ids(self) -> set[int]:
-        """Set of global user ids.
-
-        Returns the set of global user ids. The global user ids are the union of
-        known and unknown user ids.
-
-        Returns:
-            set[int]: Set of global user ids.
-        """
-        return self.known_user | self.unknown_user
-
-    @property
-    def global_item_ids(self) -> set[int]:
-        """Set of global item ids.
-
-        Returns the set of global item ids. The global item ids are the union of
-        known and unknown item ids.
-
-        Returns:
-            set[int]: Set of global item ids.
-        """
-        return self.known_item | self.unknown_item
 
     def update_known_user_item_base(self, data: InteractionMatrix) -> None:
         """Updates the known user and item set with the data.
