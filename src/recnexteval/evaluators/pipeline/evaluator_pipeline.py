@@ -124,7 +124,7 @@ class EvaluatorPipeline(EvaluatorBase):
             X_pred = algo_state.algorithm_ptr.predict(unlabeled_data)
             logger.debug("Shape of prediction matrix: %s", X_pred.shape)
             logger.debug("Shape of ground truth matrix: %s", X_true.shape)
-            X_pred = self._prediction_shape_handler(X_true, X_pred)
+            X_pred = self._prediction_unknown_item_handler(X_true, X_pred)
 
             for metric_entry in self.metric_entries:
                 metric_cls = METRIC_REGISTRY.get(metric_entry.name)

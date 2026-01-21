@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass, field
-from enum import Enum
 from uuid import UUID
 
 from scipy.sparse import csr_matrix
@@ -9,23 +8,13 @@ from ...algorithms import Algorithm
 from ...matrix import InteractionMatrix, PredictionMatrix
 from ...registries import (
     METRIC_REGISTRY,
-    MetricEntry,
 )
-from ...settings import EOWSettingError, Setting
+from ...settings import EOWSettingError
 from ..accumulator import MetricAccumulator
 from ..base import EvaluatorBase
 from ..state_management import AlgorithmStateEnum, AlgorithmStateManager
+from .state import EvaluatorState
 from .strategy import EvaluationStrategy, SlidingWindowStrategy
-
-
-class EvaluatorState(Enum):
-    """Evaluator lifecycle states"""
-
-    INITIALIZED = "initialized"
-    STARTED = "started"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    FAILED = "failed"
 
 
 logger = logging.getLogger(__name__)
@@ -99,47 +88,8 @@ class EvaluatorStreamer(EvaluatorBase):
         self._state = new_state
         logger.info(f"Evaluator transitioned to {new_state}")
 
-    def _cache_evaluation_data(self) -> None:
-        """Cache the evaluation data for the current step.
-
-        Summary
-        -------
-        This method will cache the evaluation data for the current step. The method
-        will update the unknown user/item base, get the next unlabeled and ground
-        truth data, and update the current timestamp.
-
-        Specifics
-        ---------
-        The method will update the unknown user/item base with the ground truth data.
-        Next, mask the unlabeled and ground truth data with the known user/item
-        base. The method will cache the unlabeled and ground truth data in the internal
-        attributes :attr:`_unlabeled_data_cache` and :attr:`_ground_truth_data_cache`.
-        The timestamp is cached in the internal attribute :attr:`_current_timestamp`.
-
-        We use an internal attribute :attr:`_run_step` to keep track of the current
-        step such that we can check if we have reached the last step.
-
-        We assume that any method calling this method has already checked if the
-        there is still data to be processed.
-        """
-
-        logger.debug(f"Caching evaluation data for step {self._run_step}")
-        try:
-            self._unlabeled_data_cache, self._ground_truth_data_cache, _ = self._get_evaluation_data()
-        except EOWSettingError as e:
-            raise e
-        logger.debug(f"Data cached for step {self._run_step} complete")
-
     def start_stream(self) -> None:
         """Start the streaming process.
-
-        This method is called to start the streaming process. `start_stream` will
-        prepare the evaluator for the streaming process. `start_stream` will reset
-        data streamers, prepare the micro and macro accumulators, update
-        the known user/item base, and cache data.
-
-        The method will set the internal state to be be started. The
-        method can be called anytime after the evaluator is instantiated.
 
         Warning:
             Once `start_stream` is called, the evaluator cannot register any new algorithms.
@@ -165,8 +115,10 @@ class EvaluatorStreamer(EvaluatorBase):
 
         This method is called to register the algorithm with the evaluator.
         The method will assign a unique identifier to the algorithm and store
-        the algorithm in the registry. The method will raise a ValueError if
-        the stream has already started.
+        the algorithm in the registry.
+
+        Warning:
+            Once `start_stream` is called, the evaluator cannot register any new algorithms.
         """
         self._assert_state(EvaluatorState.INITIALIZED, "Cannot register algorithms after stream started")
         algo_id = self._algo_state_mgr.register(name=algorithm_name, algorithm_ptr=algorithm)
@@ -175,10 +127,6 @@ class EvaluatorStreamer(EvaluatorBase):
 
     def get_algorithm_state(self, algo_id: UUID) -> AlgorithmStateEnum:
         """Get the state of the algorithm.
-
-        This method is called to get the state of the algorithm given the
-        unique identifier of the algorithm. The method will return the state
-        of the algorithm.
 
         Args:
             algo_id: Unique identifier of the algorithm.
@@ -190,10 +138,6 @@ class EvaluatorStreamer(EvaluatorBase):
 
     def get_all_algorithm_status(self) -> dict[str, AlgorithmStateEnum]:
         """Get the status of all algorithms.
-
-        This method is called to get the status of all algorithms registered
-        with the evaluator. The method will return a dictionary where the key
-        is the name of the algorithm and the value is the state of the algorithm.
 
         Returns:
             The status of all algorithms.
@@ -208,29 +152,6 @@ class EvaluatorStreamer(EvaluatorBase):
 
     def get_training_data(self, algo_id: UUID) -> InteractionMatrix:
         """Get training data for the algorithm.
-
-        Summary
-        -------
-
-        This method is called to get the training data for the algorithm. The
-        training data is defined as either the background data or the incremental
-        data. The training data is always released irrespective of the state of
-        the algorithm.
-
-        Specifics
-        ---------
-
-        1. If the state is COMPLETED, raise warning that the algorithm has completed
-        2. If the state is NEW, release training data to the algorithm
-        3. If the state is READY and the data segment is the same, raise warning
-           that the algorithm has already obtained data
-        4. If the state is PREDICTED and the data segment is the same, inform
-           the algorithm that it has already predicted and should wait for other
-           algorithms to predict
-        5. This will occur when :attr:`_current_timestamp` has changed, which causes
-           scenario 2 to not be caught. In this case, the algorithm is requesting
-           the next window of data. Thus, this is a valid data call and the status
-           will be updated to READY.
 
         Args:
             algo_id: Unique identifier of the algorithm.
@@ -323,11 +244,10 @@ class EvaluatorStreamer(EvaluatorBase):
         """
         # get top k ground truth interactions
         y_true = self._ground_truth_data_cache
-        # y_true = self._ground_truth_data_cache.get_users_n_first_interaction(self.metric_k)
         y_true = y_true.item_interaction_sequence_matrix
 
-        y_pred = self._prediction_shape_handler(y_true, y_pred)
-        algorithm_name = self._algo_state_mgr.get_algorithm_identifier(algo_id)
+        y_pred = self._prediction_unknown_item_handler(y_true=y_true, y_pred=y_pred)
+        algorithm_name = self._algo_state_mgr.get_algorithm_identifier(algo_id=algo_id)
 
         # evaluate the prediction
         for metric_entry in self.metric_entries:

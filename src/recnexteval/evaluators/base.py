@@ -111,45 +111,47 @@ class EvaluatorBase:
             unlabeled_data._df = unlabeled_data._df.loc[ground_truth_data._df.index]
         return unlabeled_data, ground_truth_data, self._current_timestamp
 
-    def _prediction_shape_handler(
+    def _prediction_unknown_item_handler(
         self, y_true: csr_matrix, y_pred: csr_matrix
     ) -> csr_matrix:
-        """Handle shape difference of the prediction matrix.
+        """Handle shape difference due to unknown items in ground truth matrix."""
+        # X_true_shape = y_true.shape
+        # if y_pred.shape != X_true_shape:
+        #     logger.warning("Prediction matrix shape %s is different from ground truth matrix shape %s.", y_pred.shape, X_true_shape)
+        #     # We cannot expect the algorithm to predict an unknown item, so we
+        #     # only check user dimension
+        #     # if y_pred.shape[0] < X_true_shape[0] and not self.ignore_unknown_user:  # type: ignore
+        #     #     raise ValueError(
+        #     #         "Prediction matrix shape, user dimension, is less than the ground truth matrix shape."
+        #     #     )
 
-        If there is a difference in the shape of the prediction matrix and the
-        ground truth matrix, this function will handle the difference based on
-        `ignore_unknown_user` and `ignore_unknown_item`.
-
-        Args:
-            X_true: Ground truth matrix.
-            X_pred: Prediction matrix.
-        """
-        X_true_shape = y_true.shape
-        if y_pred.shape != X_true_shape:
-            logger.warning("Prediction matrix shape %s is different from ground truth matrix shape %s.", y_pred.shape, X_true_shape)
-            # We cannot expect the algorithm to predict an unknown item, so we
-            # only check user dimension
-            if y_pred.shape[0] < X_true_shape[0] and not self.ignore_unknown_user:  # type: ignore
-                raise ValueError(
-                    "Prediction matrix shape, user dimension, is less than the ground truth matrix shape."
-                )
-
-            if not self.ignore_unknown_item:
-                # prediction matrix would not contain unknown item ID
-                # update the shape of the prediction matrix to include the ID
-                y_pred = csr_matrix(
-                    (y_pred.data, y_pred.indices, y_pred.indptr),
-                    shape=(y_pred.shape[0], X_true_shape[1]),  # type: ignore
-                )
+        #     if not self.ignore_unknown_item:
+        #         # prediction matrix would not contain unknown item ID
+        #         # update the shape of the prediction matrix to include the ID
+        #         y_pred = csr_matrix(
+        #             (y_pred.data, y_pred.indices, y_pred.indptr),
+        #             shape=(y_pred.shape[0], X_true_shape[1]),  # type: ignore
+        #         )
 
             # shapes might not be the same in the case of dropping unknowns
             # from the ground truth data. We ensure that the same unknowns
             # are dropped from the predictions
-            if self.ignore_unknown_user:
-                y_pred = y_pred[: X_true_shape[0], :]  # type: ignore
-            if self.ignore_unknown_item:
-                y_pred = y_pred[:, : X_true_shape[1]]  # type: ignore
+            # if self.ignore_unknown_user:
+            #     y_pred = y_pred[: X_true_shape[0], :]  # type: ignore
+            # if self.ignore_unknown_item:
+            #     y_pred = y_pred[:, : X_true_shape[1]]  # type: ignore
+        if y_pred.shape[1] == y_true.shape[1]:
+            return y_pred
+        logger.warning(
+            "Prediction matrix shape %s is different from ground truth matrix shape %s.",
+            y_pred.shape,
+            y_true.shape,
+        )
 
+        y_pred = csr_matrix(
+            (y_pred.data, y_pred.indices, y_pred.indptr),
+            shape=(y_pred.shape[0], y_true.shape[1]),
+        )
         return y_pred
 
     def metric_results(
