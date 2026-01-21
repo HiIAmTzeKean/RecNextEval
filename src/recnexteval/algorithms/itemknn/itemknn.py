@@ -67,7 +67,7 @@ class ItemKNN(TopKItemSimilarityMatrixAlgorithm, PopularityPaddingMixin):
         return self
 
     def _predict(self, X: PredictionMatrix) -> csr_matrix:
-        predict_ui_df = X.get_prediction_data()._df  # noqa: SLF001
+        predict_ui_df = X.filter_to_predict()._df  # noqa: SLF001
 
         # create a boolean series that is true for index in predict_ui_df.uid
         uid_to_predict = predict_ui_df[predict_ui_df.uid < self.X_.shape[0]].uid.unique()
@@ -106,11 +106,9 @@ class ItemKNN(TopKItemSimilarityMatrixAlgorithm, PopularityPaddingMixin):
                 predict_ui_df=predict_ui_df,
             )
         else:
-            # current_shape = (X.max_known_user_id, X.max_known_item_id)
             scores = self._pad_unknown_uid_with_random_strategy(
                 X_pred=scores,
                 current_shape=scores.shape,
-                # current_shape=current_shape,
                 intended_shape=intended_shape,
                 predict_ui_df=predict_ui_df,
             )

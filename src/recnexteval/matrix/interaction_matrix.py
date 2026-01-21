@@ -3,7 +3,7 @@ import operator
 from collections.abc import Callable
 from copy import deepcopy
 from enum import StrEnum
-from typing import Literal, overload
+from typing import Literal, Self, overload
 from warnings import warn
 
 import numpy as np
@@ -116,7 +116,7 @@ class InteractionMatrix:
 
         self._df = df
 
-    def copy(self) -> "InteractionMatrix":
+    def copy(self) -> Self:
         """Create a deep copy of this InteractionMatrix.
 
         :return: Deep copy of this InteractionMatrix.
@@ -207,12 +207,23 @@ class InteractionMatrix:
         return self.values.nonzero()
 
     @overload
-    def users_in(self, U: set[int]) -> "InteractionMatrix": ...
+    def _apply_mask(self, mask: pd.Series) -> Self: ...
     @overload
-    def users_in(self, U: set[int], inplace: Literal[False]) -> "InteractionMatrix": ...
+    def _apply_mask(self, mask: pd.Series, inplace: Literal[True]) -> None: ...
+    @overload
+    def _apply_mask(self, mask: pd.Series, inplace: Literal[False]) -> Self: ...
+    def _apply_mask(self, mask: pd.Series, inplace: bool = False) -> None | Self:
+        interaction_m = self if inplace else self.copy()
+        interaction_m._df = interaction_m._df[mask]
+        return None if inplace else interaction_m
+
+    @overload
+    def users_in(self, U: set[int]) -> Self: ...
+    @overload
+    def users_in(self, U: set[int], inplace: Literal[False]) -> Self: ...
     @overload
     def users_in(self, U: set[int], inplace: Literal[True]) -> None: ...
-    def users_in(self, U: set[int], inplace: bool = False) -> "None | InteractionMatrix":
+    def users_in(self, U: set[int], inplace: bool = False) -> None | Self:
         """Keep only interactions by one of the specified users.
 
         :param U: A set or list of users to select the interactions from.
@@ -227,17 +238,6 @@ class InteractionMatrix:
         mask = self._df[InteractionMatrix.USER_IX].isin(U)
 
         return self._apply_mask(mask, inplace=inplace)
-
-    @overload
-    def _apply_mask(self, mask: pd.Series) -> "InteractionMatrix": ...
-    @overload
-    def _apply_mask(self, mask: pd.Series, inplace: Literal[True]) -> None: ...
-    @overload
-    def _apply_mask(self, mask: pd.Series, inplace: Literal[False]) -> "InteractionMatrix": ...
-    def _apply_mask(self, mask: pd.Series, inplace: bool = False) -> "None | InteractionMatrix":
-        interaction_m = self if inplace else self.copy()
-        interaction_m._df = interaction_m._df[mask]
-        return None if inplace else interaction_m
 
     def _timestamps_cmp(self, op: Callable, timestamp: float, inplace: bool = False) -> "None | InteractionMatrix":
         """Filter interactions based on timestamp.
@@ -385,12 +385,12 @@ class InteractionMatrix:
         return len(self._df)
 
     @overload
-    def items_in(self, id_set: set[int]) -> "InteractionMatrix": ...
+    def items_in(self, id_set: set[int]) -> Self: ...
     @overload
-    def items_in(self, id_set: set[int], inplace: Literal[False]) -> "InteractionMatrix": ...
+    def items_in(self, id_set: set[int], inplace: Literal[False]) -> Self: ...
     @overload
     def items_in(self, id_set: set[int], inplace: Literal[True]) -> None: ...
-    def items_in(self, id_set: set[int], inplace=False) -> "None | InteractionMatrix":
+    def items_in(self, id_set: set[int], inplace=False) -> None | Self:
         """Keep only interactions with the specified items.
 
         :param id_set: A set or list of items to select the interactions.
@@ -402,7 +402,7 @@ class InteractionMatrix:
         """
         logger.debug("Performing items_in comparison")
 
-        mask = self._df[InteractionMatrix.ITEM_IX].isin(id_set)
+        mask = self._df[__class__.ITEM_IX].isin(id_set)
 
         return self._apply_mask(mask, inplace=inplace)
 
@@ -623,14 +623,6 @@ class InteractionMatrix:
         """
         return self._df[InteractionMatrix.USER_IX].to_numpy()
 
-    def get_prediction_data(self) -> "InteractionMatrix":
-        """Get the data to be predicted.
-
-        :return: InteractionMatrix with only the data to be predicted.
-        :rtype: InteractionMatrix
-        """
-        return self.items_in({-1})
-
     def get_interaction_data(self) -> "InteractionMatrix":
         """Get the data that is not denoted by "-1".
 
@@ -754,10 +746,6 @@ class InteractionMatrix:
 
     @property
     def timestamps(self) -> pd.Series:
-        """The interaction timestamps indexed by user and item ID.
-
-        :raises
-        """
         """Timestamps of interactions as a pandas Series, indexed by user ID and item ID.
 
         :raises TimestampAttributeMissingError: If timestamp column is missing.

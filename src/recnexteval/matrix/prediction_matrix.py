@@ -1,4 +1,5 @@
 import logging
+from typing import Self
 from warnings import warn
 
 import numpy as np
@@ -29,9 +30,17 @@ class PredictionMatrix(InteractionMatrix):
             skip_df_processing=True,
         )
 
+    def filter_to_predict(self) -> Self:
+        """Get the data to be predicted.
+
+        :return: InteractionMatrix with only the data to be predicted.
+        :rtype: InteractionMatrix
+        """
+        return self.items_in({-1})
+
     def mask_user_item_shape(
         self,
-        shape: None | tuple[int, int] = None,
+        shape: tuple[int, int],
         drop_unknown_user: bool = False,
         drop_unknown_item: bool = False,
         inherit_max_id: bool = False,
@@ -88,20 +97,6 @@ class PredictionMatrix(InteractionMatrix):
             defined and the dataframe contains unknown users/items. Defaults to False
         :type inherit_max_id: bool, optional
         """
-
-        if not shape:
-            # infer shape from the data
-            known_user = np.nan_to_num(self._df[self._df != -1][InteractionMatrix.USER_IX].max(), nan=-1)
-            known_item = np.nan_to_num(self._df[self._df != -1][InteractionMatrix.ITEM_IX].max(), nan=-1)
-            self.user_item_shape = (known_user, known_item)
-            logger.debug(f"(user x item) shape inferred is {self.user_item_shape}")
-            if known_user == -1 or known_item == -1:
-                warn(
-                    "One of the dimensions of the shape cannot be inferred from the data. "
-                    "Call mask_shape() with shape parameter.",
-                    stacklevel=2,
-                )
-            return
 
         logger.debug(
             f"(user x item) shape defined is {shape}. "

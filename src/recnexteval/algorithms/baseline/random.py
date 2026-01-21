@@ -21,12 +21,11 @@ class Random(TopKAlgorithm):
         return self
 
     def _predict(self, X: PredictionMatrix) -> csr_matrix:
-        predict_ui_df = X.get_prediction_data()._df  # noqa: SLF001
-
+        X = X.filter_to_predict()
         known_item_id = X.max_known_item_id
         intended_shape = (X.max_global_user_id, known_item_id)
 
-        to_predict = pd.Series(predict_ui_df.uid.unique())
+        to_predict = pd.Series(list(X.user_ids))
         to_predict = to_predict.sort_values(ignore_index=True)
         row = to_predict.values.repeat(self.K)
         total_items_to_predict = len(row)
@@ -35,5 +34,5 @@ class Random(TopKAlgorithm):
 
         # Get top K of allowed items per user
         X_pred = get_top_K_values(scores, K=self.K)
-        X_pred = X_pred[predict_ui_df["uid"].values]
+        X_pred = X_pred[X.user_id_sequence_array]
         return X_pred

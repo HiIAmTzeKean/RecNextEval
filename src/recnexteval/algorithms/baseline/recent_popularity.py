@@ -25,7 +25,7 @@ class RecentPopularity(TopKAlgorithm, PopularityPaddingMixin):
         """
         Predict the K most popular item for each user using only data from the latest window.
         """
-        intended_shape = (X.get_prediction_data().num_interactions, X.user_item_shape[1])
+        intended_shape = (X.filter_to_predict().num_interactions, X.user_item_shape[1])
 
         # Vectorized: repeat the sorted scores for each prediction row
         data = np.tile(self.sorted_scores_, (intended_shape[0], 1))
