@@ -24,6 +24,10 @@ class Builder(ABC):
     errors when the builder is executed.
     """
 
+    setting: Setting = field(init=False)
+    """Setting to evaluate the algorithms on"""
+    metric_k: int = 10
+    """K value for metrics"""
     ignore_unknown_user: bool = True
     """Ignore unknown user in the evaluation"""
     ignore_unknown_item: bool = True
@@ -33,10 +37,6 @@ class Builder(ABC):
     metric_entries: dict[str, MetricEntry] = field(default_factory=dict)
     """dict of metrics to evaluate algorithm on.
     Using dict instead of list for fast lookup"""
-    setting: Setting = field(default=None)
-    """Setting to evaluate the algorithms on"""
-    metric_k: int = field(default=None)
-    """K value for metrics"""
 
     def _check_setting_exist(self) -> bool:
         """Check if setting is already set.

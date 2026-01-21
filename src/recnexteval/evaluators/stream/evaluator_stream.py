@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass, field
 from enum import Enum
 from uuid import UUID
 
@@ -30,6 +31,7 @@ class EvaluatorState(Enum):
 logger = logging.getLogger(__name__)
 
 
+@dataclass
 class EvaluatorStreamer(EvaluatorBase):
     """Evaluation via streaming through API.
 
@@ -63,45 +65,32 @@ class EvaluatorStreamer(EvaluatorBase):
         ignore_unknown_user: To ignore unknown users.
         ignore_unknown_item: To ignore unknown items.
         seed: Random seed for the evaluator.
+        strategy: Evaluation strategy to use.
     """
 
-    def __init__(
-        self,
-        metric_entries: list[MetricEntry],
-        setting: Setting,
-        metric_k: int,
-        ignore_unknown_user: bool = False,
-        ignore_unknown_item: bool = False,
-        seed: int = 42,
-        strategy: None | EvaluationStrategy = None,
-    ) -> None:
-        super().__init__(
-            metric_entries,
-            setting,
-            metric_k,
-            ignore_unknown_user,
-            ignore_unknown_item,
-            seed,
-        )
-        self._algo_state_mgr = AlgorithmStateManager()
-        self._unlabeled_data_cache: PredictionMatrix
-        self._ground_truth_data_cache: PredictionMatrix
-        self._training_data_cache: PredictionMatrix
+    _strategy: EvaluationStrategy = field(init=False)
+    _algo_state_mgr: AlgorithmStateManager = field(default_factory=AlgorithmStateManager)
+    _unlabeled_data_cache: PredictionMatrix = field(init=False)
+    _ground_truth_data_cache: PredictionMatrix = field(init=False)
+    _training_data_cache: PredictionMatrix = field(init=False)
+    _state: EvaluatorState = EvaluatorState.INITIALIZED
 
-        # Evaluator state management
-        self._state = EvaluatorState.INITIALIZED
-
-        # Evaluation strategy
-        self._strategy = strategy or SlidingWindowStrategy()
+    def __post_init__(self) -> None:
+        """Initialize fields that require computation."""
+        self._strategy = SlidingWindowStrategy()
 
     @property
     def state(self) -> EvaluatorState:
         return self._state
 
-    def _assert_state(self, expected: EvaluatorState, error_msg: str) -> None:
+    def _assert_state(self, expected: EvaluatorState | list[EvaluatorState], error_msg: str) -> None:
         """Assert evaluator is in expected state"""
-        if self._state != expected:
+        if not isinstance(expected, list):
+            expected = [expected]
+
+        if self._state not in expected:
             raise RuntimeError(f"{error_msg} (Current state: {self._state.value})")
+        return
 
     def _transition_state(self, new_state: EvaluatorState, allow_from: list[EvaluatorState]) -> None:
         """Guard state transitions explicitly"""
@@ -162,18 +151,10 @@ class EvaluatorStreamer(EvaluatorBase):
 
         logger.debug("Preparing evaluator for streaming")
         self._acc = MetricAccumulator()
-        training_data = self.setting.training_data
-        # Convert to PredictionMatrix since it's a subclass of InteractionMatrix
-        training_data = PredictionMatrix.from_interaction_matrix(training_data)
-
-        self.user_item_base.update_known_user_item_base(training_data)
-        training_data.mask_user_item_shape(self.user_item_base.known_shape)
-        self._training_data_cache = training_data
-        self._cache_evaluation_data()
-        self._algo_state_mgr.set_all_ready(data_segment=self._current_timestamp)
+        self.load_next_window()
         logger.debug("Evaluator is ready for streaming")
         # TODO: allow programmer to register anytime
-        self._transition_state(EvaluatorState.STARTED, allow_from=[EvaluatorState.INITIALIZED])
+        self._transition_state(new_state=EvaluatorState.STARTED, allow_from=[EvaluatorState.INITIALIZED])
 
     def register_algorithm(
         self,
@@ -188,7 +169,7 @@ class EvaluatorStreamer(EvaluatorBase):
         the stream has already started.
         """
         self._assert_state(EvaluatorState.INITIALIZED, "Cannot register algorithms after stream started")
-        algo_id = self._algo_state_mgr.register(name=algorithm_name, algo_ptr=algorithm)
+        algo_id = self._algo_state_mgr.register(name=algorithm_name, algorithm_ptr=algorithm)
         logger.debug(f"Algorithm {algo_id} registered")
         return algo_id
 
@@ -221,16 +202,8 @@ class EvaluatorStreamer(EvaluatorBase):
 
     def load_next_window(self) -> None:
         self.user_item_base.reset_unknown_user_item_base()
-        incremental_data = self.setting.get_split_at(self._run_step).incremental
-        if incremental_data is None:
-            raise EOWSettingError("No more data to stream")
-        # Convert to PredictionMatrix since it's a subclass of InteractionMatrix
-        incremental_data = PredictionMatrix.from_interaction_matrix(incremental_data)
-
-        self.user_item_base.update_known_user_item_base(incremental_data)
-        incremental_data.mask_user_item_shape(self.user_item_base.known_shape)
-        self._training_data_cache = incremental_data
-        self._cache_evaluation_data()
+        self._training_data_cache = self._get_training_data()
+        self._unlabeled_data_cache, self._ground_truth_data_cache, self._current_timestamp = self._get_evaluation_data()
         self._algo_state_mgr.set_all_ready(data_segment=self._current_timestamp)
 
     def get_training_data(self, algo_id: UUID) -> InteractionMatrix:
@@ -268,7 +241,7 @@ class EvaluatorStreamer(EvaluatorBase):
         Returns:
             The training data for the algorithm.
         """
-        self._assert_state(EvaluatorState.STARTED, "Call start_stream() first")
+        self._assert_state(expected=[EvaluatorState.STARTED, EvaluatorState.IN_PROGRESS], error_msg="Call start_stream() first")
 
         logger.debug(f"Getting data for algorithm {algo_id}")
 
@@ -295,7 +268,7 @@ class EvaluatorStreamer(EvaluatorBase):
             data_segment=self._current_timestamp,
         )
 
-        self._evaluator_state = EvaluatorState.IN_PROGRESS
+        self._state = EvaluatorState.IN_PROGRESS
         # release data to the algorithm
         return self._training_data_cache
 

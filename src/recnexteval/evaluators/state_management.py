@@ -46,7 +46,7 @@ class AlgorithmStateEntry:
 
     name: str
     algorithm_uuid: UUID
-    algorithm_ptr: type[Algorithm] | Algorithm
+    algorithm_ptr: Algorithm
     state: AlgorithmStateEnum = AlgorithmStateEnum.NEW
     data_segment: int = 0
     params: dict[str, Any] = field(default_factory=dict)
@@ -130,14 +130,17 @@ class AlgorithmStateManager:
 
     def register(
         self,
-        algo_ptr: type[Algorithm] | Algorithm,
+        algorithm_ptr: type[Algorithm] | Algorithm,
         name: None | str = None,
         params: dict[str, Any] = {},
         algo_uuid: None | UUID = None,
     ) -> UUID:
         """Register new algorithm"""
-        if hasattr(algo_ptr, "identifier"):
-            name = name or algo_ptr.identifier  # type: ignore[attr-defined]
+        if isinstance(algorithm_ptr, type):
+            algorithm_ptr = algorithm_ptr(**params)
+
+        if hasattr(algorithm_ptr, "identifier"):
+            name = name or algorithm_ptr.identifier  # type: ignore[attr-defined]
 
         if not name:
             logger.warning("Algorithm name was not provided and could not be inferred from Algorithm pointer")
@@ -146,7 +149,7 @@ class AlgorithmStateManager:
         if algo_uuid is None:
             algo_uuid = generate_algorithm_uuid(name=name)
 
-        entry = AlgorithmStateEntry(algorithm_uuid=algo_uuid, name=name, algorithm_ptr=algo_ptr, params=params)
+        entry = AlgorithmStateEntry(algorithm_uuid=algo_uuid, name=name, algorithm_ptr=algorithm_ptr, params=params)
         self._algorithms[algo_uuid] = entry
         logger.info(f"Registered algorithm '{name}' with ID {algo_uuid}")
         return algo_uuid

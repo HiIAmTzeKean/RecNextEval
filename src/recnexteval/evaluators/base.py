@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass, field
 from typing import Literal
 
 import pandas as pd
@@ -14,7 +15,8 @@ from .util import MetricLevelEnum, UserItemBaseStatus
 logger = logging.getLogger(__name__)
 
 
-class EvaluatorBase(object):
+@dataclass
+class EvaluatorBase:
     """Base class for evaluator.
 
     Provides the common methods and attributes for the evaluator classes. Should
@@ -23,34 +25,40 @@ class EvaluatorBase(object):
     Args:
         metric_entries: List of metric entries to compute.
         setting: Setting object.
+        metric_k: Value of K for the metrics.
         ignore_unknown_user: Ignore unknown users, defaults to False.
         ignore_unknown_item: Ignore unknown items, defaults to False.
+        seed: Random seed for reproducibility.
     """
 
-    def __init__(
-        self,
-        metric_entries: list[MetricEntry],
-        setting: Setting,
-        metric_k: int,
-        ignore_unknown_user: bool = False,
-        ignore_unknown_item: bool = False,
-        seed: int = 42,
-    ) -> None:
-        self.metric_entries = metric_entries
-        self.setting = setting
-        """Setting to evaluate the algorithms on."""
-        self.metric_k = metric_k
-        """Value of K for the metrics."""
-        self.ignore_unknown_user = ignore_unknown_user
-        """To ignore unknown users during evaluation."""
-        self.ignore_unknown_item = ignore_unknown_item
-        """To ignore unknown items during evaluation."""
+    metric_entries: list[MetricEntry]
+    setting: Setting
+    metric_k: int
+    ignore_unknown_user: bool = False
+    ignore_unknown_item: bool = False
+    seed: int = 42
+    user_item_base: UserItemBaseStatus = field(default_factory=UserItemBaseStatus)
+    _run_step: int = 0
+    _acc: MetricAccumulator = field(init=False)
+    _current_timestamp: int = field(init=False)
 
-        self.user_item_base = UserItemBaseStatus()
-        self.seed = seed
-        self._run_step = 0
-        self._acc: MetricAccumulator
-        self._current_timestamp: int
+    def _get_training_data(self) -> PredictionMatrix:
+        if self._run_step == 0:
+            logger.debug("First step, getting training data")
+            training_data = self.setting.training_data
+            self.user_item_base.update_known_user_item_base(training_data)
+            training_data = PredictionMatrix.from_interaction_matrix(training_data)
+            training_data.mask_user_item_shape(self.user_item_base.known_shape)
+        else:
+            logger.debug("Not first step, getting previous ground truth data as training data")
+            training_data = self.setting.get_split_at(self._run_step).incremental
+            if training_data is None:
+                raise ValueError("Incremental data is None in sliding window setting")
+            self.user_item_base.reset_unknown_user_item_base()
+            self.user_item_base.update_known_user_item_base(training_data)
+            training_data = PredictionMatrix.from_interaction_matrix(training_data)
+            training_data.mask_user_item_shape(self.user_item_base.known_shape)
+        return training_data
 
     def _get_evaluation_data(self) -> tuple[PredictionMatrix, PredictionMatrix, int]:
         """Get the evaluation data for the current step.
