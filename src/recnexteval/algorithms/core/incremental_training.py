@@ -1,13 +1,4 @@
-from typing import Protocol, TypeVar
-
 from scipy.sparse import csr_matrix, hstack, vstack
-
-
-class HasX(Protocol):
-    X_: csr_matrix | None
-
-
-T = TypeVar("T", bound=HasX)
 
 
 class IncrementalTrainingMixin:
@@ -15,34 +6,29 @@ class IncrementalTrainingMixin:
 
     Expects the concrete class to have an attribute `X_` (csr_matrix | None).
     """
+    X_: csr_matrix | None
 
-    def _append_training_data(self: T, X: csr_matrix) -> None:
+    @staticmethod
+    def _pad_sparse_matrix(X: csr_matrix, target_shape: tuple[int, int]) -> csr_matrix:
+        if X.shape == target_shape:
+            return X
+        if X.shape[0] < target_shape[0]:
+            row_pad = csr_matrix((target_shape[0] - X.shape[0], X.shape[1]))
+            X = vstack([X, row_pad])
+        if X.shape[1] < target_shape[1]:
+            col_pad = csr_matrix((X.shape[0], target_shape[1] - X.shape[1]))
+            X = hstack([X, col_pad])
+        return X
+
+    def _append_training_data(self, X: csr_matrix) -> None:
         """Append a new interaction matrix to the historical data.
 
         Pads matrices to the same shape and sums them in-place into `self.X_`.
         """
-        if getattr(self, "X_", None) is None:
-            raise ValueError("No existing training data to append to.")
+        if self.X_ is None:
+            raise ValueError("X_ must be initialized first")
 
-        X_prev: csr_matrix = self.X_.copy()
-        new_num_rows = max(X_prev.shape[0], X.shape[0])
-        new_num_cols = max(X_prev.shape[1], X.shape[1])
-
-        # Pad the previous matrix
-        if X_prev.shape[0] < new_num_rows:  # Pad rows
-            row_padding = csr_matrix((new_num_rows - X_prev.shape[0], X_prev.shape[1]))
-            X_prev = vstack([X_prev, row_padding])
-        if X_prev.shape[1] < new_num_cols:  # Pad columns
-            col_padding = csr_matrix((X_prev.shape[0], new_num_cols - X_prev.shape[1]))
-            X_prev = hstack([X_prev, col_padding])
-
-        # Pad the current matrix
-        if X.shape[0] < new_num_rows:  # Pad rows
-            row_padding = csr_matrix((new_num_rows - X.shape[0], X.shape[1]))
-            X = vstack([X, row_padding])
-        if X.shape[1] < new_num_cols:  # Pad columns
-            col_padding = csr_matrix((X.shape[0], new_num_cols - X.shape[1]))
-            X = hstack([X, col_padding])
-
-        # Merge data
+        target_shape = (max(self.X_.shape[0], X.shape[0]), max(self.X_.shape[1], X.shape[1]))
+        X_prev = self._pad_sparse_matrix(self.X_.copy(), target_shape)
+        X = self._pad_sparse_matrix(X, target_shape)
         self.X_ = X_prev + X

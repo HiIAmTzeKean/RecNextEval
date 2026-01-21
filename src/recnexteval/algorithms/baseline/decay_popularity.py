@@ -18,7 +18,7 @@ class DecayPopularity(TopKAlgorithm, PopularityPaddingMixin, IncrementalTraining
     decay_rate = 0.01
     internal_clock = 0
 
-    def _compute_decay_weights(self, time_delta):
+    def _compute_decay_weights(self, time_delta: int) -> float:
         """Apply decay based on time."""
         if self.decay_type == "exponential":
             return np.exp(-self.decay_rate * time_delta)
