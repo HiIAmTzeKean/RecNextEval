@@ -1,39 +1,17 @@
 import logging
-from collections.abc import Callable
 from copy import deepcopy
-from enum import StrEnum
 from typing import Literal, Self, overload
 
 import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 
+from .enums import ItemUserBasedEnum
 from .exception import TimestampAttributeMissingError
 from .filters import SelectionIDMixin, SelectionTimestampMixin
 
 
 logger = logging.getLogger(__name__)
-
-
-class ItemUserBasedEnum(StrEnum):
-    """Enum class for item and user based properties.
-
-    Enum class to indicate if the function or logic is based on item or user.
-    """
-
-    ITEM = "item"
-    """Property based on item"""
-    USER = "user"
-    """Property based on user"""
-
-    @classmethod
-    def has_value(cls, value: str) -> bool:
-        """Check valid value for ItemUserBasedEnum
-
-        :param value: String value input
-        :type value: str
-        """
-        return value in ItemUserBasedEnum
 
 
 class InteractionMatrix(SelectionIDMixin, SelectionTimestampMixin):
@@ -52,25 +30,6 @@ class InteractionMatrix(SelectionIDMixin, SelectionTimestampMixin):
           be predicted. This assumption is crucial as it will be used during the
           split scheme and evaluation of the RS since it will affect the 2D shape
           of the CSR matrix
-
-    :param df: Dataframe containing user-item interactions. Must contain at least
-        item ids and user ids.
-    :type df: pd.DataFrame
-    :param item_ix: Item ids column name.
-    :type item_ix: str
-    :param user_ix: User ids column name.
-    :type user_ix: str
-    :param timestamp_ix: Interaction timestamps column name.
-    :type timestamp_ix: str
-    :param shape: The desired shape of the matrix, i.e. the number of users and items.
-        If no shape is specified, the number of users will be equal to the
-        maximum user id plus one, the number of items to the maximum item
-        id plus one.
-    :type shape: tuple[int, int], optional
-    :param skip_df_processing: Skip processing of the dataframe. This is useful
-        when the dataframe is already processed and the columns are already
-        renamed.
-    :type skip_df_processing: bool, optional
     """
 
     ITEM_IX = "iid"
@@ -98,15 +57,15 @@ class InteractionMatrix(SelectionIDMixin, SelectionTimestampMixin):
             return
 
         col_mapper = {
-            item_ix: InteractionMatrix.ITEM_IX,
-            user_ix: InteractionMatrix.USER_IX,
-            timestamp_ix: InteractionMatrix.TIMESTAMP_IX,
+            item_ix: self.ITEM_IX,
+            user_ix: self.USER_IX,
+            timestamp_ix: self.TIMESTAMP_IX,
         }
         df = df.rename(columns=col_mapper)
         required_columns = [
-            InteractionMatrix.USER_IX,
-            InteractionMatrix.ITEM_IX,
-            InteractionMatrix.TIMESTAMP_IX,
+            self.USER_IX,
+            self.ITEM_IX,
+            self.TIMESTAMP_IX,
         ]
         extra_columns = [col for col in df.columns if col not in required_columns]
         df = df[required_columns + extra_columns].copy()
@@ -116,19 +75,11 @@ class InteractionMatrix(SelectionIDMixin, SelectionTimestampMixin):
         self._df = df
 
     def copy(self) -> Self:
-        """Create a deep copy of this InteractionMatrix.
-
-        :return: Deep copy of this InteractionMatrix.
-        :rtype: InteractionMatrix
-        """
+        """Create a deep copy of this InteractionMatrix."""
         return deepcopy(self)
 
     def copy_df(self, reset_index: bool = False) -> "pd.DataFrame":
-        """Create a deep copy of the dataframe.
-
-        :return: Deep copy of dataframe.
-        :rtype: pd.DataFrame
-        """
+        """Create a deep copy of the dataframe."""
         if reset_index:
             return deepcopy(self._df.reset_index(drop=True))
         return deepcopy(self._df)
@@ -136,13 +87,8 @@ class InteractionMatrix(SelectionIDMixin, SelectionTimestampMixin):
     def concat(self, im: "InteractionMatrix | pd.DataFrame") -> Self:
         """Concatenate this InteractionMatrix with another.
 
-        .. note::
+        Note:
             This is a inplace operation. and will modify the current object.
-
-        :param im: InteractionMatrix to concat with.
-        :type im: Union[InteractionMatrix, pd.DataFrame]
-        :return: InteractionMatrix with the interactions from both matrices.
-        :rtype: InteractionMatrix
         """
         if isinstance(im, pd.DataFrame):
             self._df = pd.concat([self._df, im])
@@ -153,34 +99,20 @@ class InteractionMatrix(SelectionIDMixin, SelectionTimestampMixin):
 
     # TODO this should be shifted to prediction matrix
     def union(self, im: "InteractionMatrix") -> Self:
-        """Combine events from this InteractionMatrix with another.
-
-        :param im: InteractionMatrix to union with.
-        :type im: InteractionMatrix
-        :return: Union of interactions in this InteractionMatrix and the other.
-        :rtype: InteractionMatrix
-        """
+        """Combine events from this InteractionMatrix with another."""
         return self + im
 
     def difference(self, im: "InteractionMatrix") -> Self:
-        """Difference between this InteractionMatrix and another.
-
-        :param im: InteractionMatrix to subtract from this.
-        :type im: InteractionMatrix
-        :return: Difference between this InteractionMatrix and the other.
-        :rtype: InteractionMatrix
-        """
+        """Difference between this InteractionMatrix and another."""
         return self - im
 
     @property
     def values(self) -> csr_matrix:
-        """All user-item interactions as a sparse matrix of size (|`global_users`|, |`global_items`|).
+        """All user-item interactions as a sparse matrix of size (|users|, |items|).
 
-        Each entry is the number of interactions between that user and item.
-        If there are no interactions between a user and item, the entry is 0.
-
-        :return: Interactions between users and items as a csr_matrix.
-        :rtype: csr_matrix
+        The shape of the matrix is determined by the `user_item_shape` attribute. Each row represents
+        a user and each column represents an item. The index of the rows and columns correspond to the user
+        and item IDs respectively. An entry in the matrix is 1 if there is an interaction.
         """
         # TODO issue with -1 labeling in the interaction matrix should i create prediction matrix
         if not hasattr(self, "user_item_shape"):
@@ -218,21 +150,7 @@ class InteractionMatrix(SelectionIDMixin, SelectionTimestampMixin):
         interaction_m._df = interaction_m._df[mask]
         return None if inplace else interaction_m
 
-    def _timestamps_cmp(self, op: Callable, timestamp: float, inplace: bool = False) -> None | Self:
-        """Filter interactions based on timestamp.
-        Keep only interactions for which op(t, timestamp) is True.
-
-        :param op: Comparison operator.
-        :type op: Callable
-        :param timestamp: Timestamp to compare against in seconds from epoch.
-        :type timestamp: float
-        :param inplace: Modify the data matrix in place. If False, returns a new object.
-        :type inplace: bool, optional
-        """
-        logger.debug(f"Performing {op.__name__}(t, {timestamp})")
-
-        mask = op(self._df[self.TIMESTAMP_IX], timestamp)
-        return self._apply_mask(mask, inplace=inplace)
+    # Timestamp selection helpers moved to SelectionTimestampMixin (src/recnexteval/matrix/filters.py)
 
     def __add__(self, im: "InteractionMatrix") -> Self:
         """Combine events from this InteractionMatrix with another.
@@ -348,90 +266,6 @@ class InteractionMatrix(SelectionIDMixin, SelectionTimestampMixin):
         interaction_m._df = c_df
         return interaction_m
 
-    def get_users_n_last_interaction(
-        self,
-        n_seq_data: int = 1,
-        t_upper: None | int = None,
-        user_in: None | set[int] = None,
-        inplace: bool = False,
-    ) -> Self:
-        """Select the last n interactions for each user.
-
-        :param n_seq_data: Number of interactions to select, defaults to 1
-        :type n_seq_data: int, optional
-        :param t_upper: Seconds past t. Upper limit for the timestamp
-            of the interactions to select, defaults to None
-        :type t_upper: None | int, optional
-        :param user_in: set of user IDs to select the interactions from,
-            defaults to None
-        :type user_in: None | set[int], optional
-        :param inplace: If operation is inplace, defaults to False
-        :type inplace: bool, optional
-        :return: Resulting interaction matrix
-        :rtype: InteractionMatrix
-        """
-        logger.debug("Performing get_user_n_last_interaction comparison")
-        return self._get_last_n_interactions(ItemUserBasedEnum.USER, n_seq_data, t_upper, user_in, inplace)
-
-    def get_items_n_last_interaction(
-        self,
-        n_seq_data: int = 1,
-        t_upper: None | int = None,
-        item_in: None | set[int] = None,
-        inplace: bool = False,
-    ) -> Self:
-        """Select the last n interactions for each item.
-
-        :param n_seq_data: Number of interactions to select, defaults to 1
-        :type n_seq_data: int, optional
-        :param t_upper: Seconds past t. Upper limit for the timestamp
-            of the interactions to select, defaults to None
-        :type t_upper: None | int, optional
-        :param item_in: set of item IDs to select the interactions from,
-            defaults to None
-        :type item_in: None | set[int], optional
-        :param inplace: If operation is inplace, defaults to False
-        :type inplace: bool, optional
-        :return: Resulting interaction matrix
-        :rtype: InteractionMatrix
-        """
-        logger.debug("Performing get_item_n_last_interaction comparison")
-        return self._get_last_n_interactions(ItemUserBasedEnum.ITEM, n_seq_data, t_upper, item_in, inplace)
-
-    def get_users_n_first_interaction(
-        self, n_seq_data: int = 1, t_lower: None | int = None, inplace=False
-    ) -> Self:
-        """Select the first n interactions for each user.
-
-        :param n_seq_data: Number of interactions to select, defaults to 1
-        :type n_seq_data: int, optional
-        :param t_lower: Seconds past t. Lower limit for the timestamp
-            of the interactions to select, defaults to None
-        :type t_lower: None | int, optional
-        :param inplace: If operation is inplace, defaults to False
-        :type inplace: bool, optional
-        :return: Resulting interaction matrix
-        :rtype: InteractionMatrix
-        """
-        return self._get_first_n_interactions(ItemUserBasedEnum.USER, n_seq_data, t_lower, inplace)
-
-    def get_items_n_first_interaction(
-        self, n_seq_data: int = 1, t_lower: None | int = None, inplace=False
-    ) -> Self:
-        """Select the first n interactions for each item.
-
-        :param n_seq_data: Number of interactions to select, defaults to 1
-        :type n_seq_data: int, optional
-        :param t_lower: Seconds past t. Lower limit for the timestamp
-            of the interactions to select, defaults to None
-        :type t_lower: None | int, optional
-        :param inplace: If operation is inplace, defaults to False
-        :type inplace: bool, optional
-        :return: Resulting interaction matrix
-        :rtype: InteractionMatrix
-        """
-        return self._get_first_n_interactions(ItemUserBasedEnum.ITEM, n_seq_data, t_lower, inplace)
-
     @property
     def item_interaction_sequence_matrix(self) -> csr_matrix:
         """Converts the interaction data into an item interaction sequence matrix.
@@ -454,8 +288,6 @@ class InteractionMatrix(SelectionIDMixin, SelectionTimestampMixin):
         :rtype: np.ndarray
         """
         return self._df[InteractionMatrix.USER_IX].to_numpy()
-
-    # `get_interaction_data` moved to SelectionMixin (src/recnexteval/matrix/filters.py)
 
     @property
     def user_ids(self) -> set[int]:

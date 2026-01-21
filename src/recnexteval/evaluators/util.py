@@ -76,28 +76,16 @@ class UserItemBaseStatus:
         )
 
     def update_known_user_item_base(self, data: InteractionMatrix) -> None:
-        """Updates the known user and item set with the data.
-
-        Args:
-            data (InteractionMatrix): Data to update the known user and item set with.
-        """
+        """Updates the known user and item set with the data."""
         self.known_item.update(data.item_ids)
         self.known_user.update(data.user_ids)
 
     def update_unknown_user_item_base(self, data: InteractionMatrix) -> None:
-        """Updates the unknown user and item set with the data.
-
-        Args:
-            data (InteractionMatrix): Data to update the unknown user and item set with.
-        """
+        """Updates the unknown user and item set with the data. """
         self.unknown_user = data.user_ids - self.known_user
         self.unknown_item = data.item_ids - self.known_item
 
     def reset_unknown_user_item_base(self) -> None:
-        """Clears the unknown user and item set.
-
-        This method clears the unknown user and item set. This method should be
-        called after the Phase 3 when the data release is done.
-        """
+        """Clears the unknown user and item set."""
         self.unknown_user.clear()
         self.unknown_item.clear()

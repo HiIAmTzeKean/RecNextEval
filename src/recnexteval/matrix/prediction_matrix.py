@@ -30,7 +30,7 @@ class PredictionMatrix(InteractionMatrix):
             skip_df_processing=True,
         )
 
-    def filter_to_predict(self) -> Self:
+    def filter_for_predict(self) -> Self:
         """Get the data to be predicted.
 
         :return: InteractionMatrix with only the data to be predicted.
