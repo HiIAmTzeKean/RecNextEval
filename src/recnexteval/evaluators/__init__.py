@@ -164,7 +164,7 @@ Utility Classes
 Utility classes that support the evaluation process:
 
 - `MetricLevelEnum`: Enumeration for different metric aggregation levels
-- `UserItemBaseStatus`: Tracks known and unknown users/items during evaluation
+- `UserItemKnowledgeBase`: Tracks known and unknown users/items during evaluation
 
 These utilities handle the complex state management required for streaming
 evaluation scenarios.
