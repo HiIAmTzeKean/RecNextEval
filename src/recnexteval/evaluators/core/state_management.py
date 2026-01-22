@@ -1,29 +1,15 @@
 import logging
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from ..algorithms import Algorithm
-from ..utils.uuid_util import generate_algorithm_uuid
+from ...algorithms import Algorithm
+from ...utils.uuid_util import generate_algorithm_uuid
+from .constant import AlgorithmStateEnum
 
 
 logger = logging.getLogger(__name__)
-
-
-class AlgorithmStateEnum(StrEnum):
-    """Enum for the state of the algorithm.
-
-    Used to keep track of the state of the algorithm during the streaming
-    process in the `EvaluatorStreamer`.
-    """
-
-    NEW = "NEW"
-    READY = "READY"
-    RUNNING = "RUNNING"
-    PREDICTED = "PREDICTED"
-    COMPLETED = "COMPLETED"
 
 
 @dataclass

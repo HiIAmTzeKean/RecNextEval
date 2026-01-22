@@ -1,34 +1,14 @@
 import logging
 from dataclasses import dataclass, field
-from enum import StrEnum
 
-from ..matrix import InteractionMatrix
+from ...matrix import InteractionMatrix
 
 
 logger = logging.getLogger(__name__)
 
 
-class MetricLevelEnum(StrEnum):
-    MICRO = "micro"
-    MACRO = "macro"
-    WINDOW = "window"
-    USER = "user"
-
-    @classmethod
-    def has_value(cls, value: str) -> bool:
-        """Check valid value for MetricLevelEnum.
-
-        Args:
-            value: String value input.
-
-        Returns:
-            Whether the value is valid.
-        """
-        return value in MetricLevelEnum
-
-
 @dataclass
-class UserItemBaseStatus:
+class UserItemKnowledgeBase:
     """Unknown and known user/item base.
 
     This class is used to store the status of the user and item base. The class

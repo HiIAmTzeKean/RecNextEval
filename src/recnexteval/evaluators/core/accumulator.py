@@ -4,8 +4,8 @@ from typing import Optional
 
 import pandas as pd
 
-from ..metrics import Metric
-from .util import MetricLevelEnum
+from ...metrics import Metric
+from .constant import MetricLevelEnum
 
 
 logger = logging.getLogger(__name__)

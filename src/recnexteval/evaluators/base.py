@@ -8,8 +8,7 @@ from scipy.sparse import csr_matrix
 from ..matrix import PredictionMatrix
 from ..registries import METRIC_REGISTRY, MetricEntry
 from ..settings import EOWSettingError, Setting
-from .accumulator import MetricAccumulator
-from .util import MetricLevelEnum, UserItemBaseStatus
+from .core import MetricAccumulator, MetricLevelEnum, UserItemKnowledgeBase
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +36,7 @@ class EvaluatorBase:
     ignore_unknown_user: bool = False
     ignore_unknown_item: bool = False
     seed: int = 42
-    user_item_base: UserItemBaseStatus = field(default_factory=UserItemBaseStatus)
+    user_item_base: UserItemKnowledgeBase = field(default_factory=UserItemKnowledgeBase)
     _run_step: int = 0
     _acc: MetricAccumulator = field(init=False)
     _current_timestamp: int = field(init=False)

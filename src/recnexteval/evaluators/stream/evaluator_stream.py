@@ -7,9 +7,9 @@ from scipy.sparse import csr_matrix
 from ...algorithms import Algorithm
 from ...matrix import InteractionMatrix, PredictionMatrix
 from ...settings import EOWSettingError
-from ..accumulator import MetricAccumulator
 from ..base import EvaluatorBase
-from ..state_management import AlgorithmStateEnum, AlgorithmStateManager
+from ..core import AlgorithmStateEnum, AlgorithmStateManager
+from ..core.accumulator import MetricAccumulator
 from .state import EvaluatorState
 from .strategy import EvaluationStrategy, SlidingWindowStrategy
 
