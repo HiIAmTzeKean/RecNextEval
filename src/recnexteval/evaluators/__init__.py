@@ -170,7 +170,6 @@ These utilities handle the complex state management required for streaming
 evaluation scenarios.
 """
 
-from .base import EvaluatorBase
 from .builder import (
     Builder,
     EvaluatorPipelineBuilder,
@@ -180,6 +179,7 @@ from .core import (
     AlgorithmStateEntry,
     AlgorithmStateEnum,
     AlgorithmStateManager,
+    EvaluatorBase,
     MetricAccumulator,
     MetricLevelEnum,
     UserItemKnowledgeBase,

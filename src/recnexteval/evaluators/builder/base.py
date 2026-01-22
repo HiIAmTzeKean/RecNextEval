@@ -9,7 +9,7 @@ from ...registries import (
 )
 from ...settings import Setting
 from ...utils import arg_to_str
-from ..base import EvaluatorBase
+from ..core.base import EvaluatorBase
 
 
 logger = logging.getLogger(__name__)

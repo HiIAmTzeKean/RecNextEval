@@ -5,10 +5,12 @@ from typing import Literal
 import pandas as pd
 from scipy.sparse import csr_matrix
 
-from ..matrix import PredictionMatrix
-from ..registries import METRIC_REGISTRY, MetricEntry
-from ..settings import EOWSettingError, Setting
-from .core import MetricAccumulator, MetricLevelEnum, UserItemKnowledgeBase
+from ...matrix import PredictionMatrix
+from ...registries import METRIC_REGISTRY, MetricEntry
+from ...settings import EOWSettingError, Setting
+from .accumulator import MetricAccumulator
+from .constant import MetricLevelEnum
+from .user_item_knowledge_base import UserItemKnowledgeBase
 
 
 logger = logging.getLogger(__name__)

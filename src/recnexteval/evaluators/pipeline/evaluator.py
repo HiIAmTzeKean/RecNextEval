@@ -5,9 +5,7 @@ from warnings import warn
 from tqdm import tqdm
 
 from ...settings import EOWSettingError
-from ..base import EvaluatorBase
-from ..core import MetricAccumulator
-from ..core.state_management import AlgorithmStateManager
+from ..core import AlgorithmStateManager, EvaluatorBase, MetricAccumulator
 
 
 logger = logging.getLogger(__name__)

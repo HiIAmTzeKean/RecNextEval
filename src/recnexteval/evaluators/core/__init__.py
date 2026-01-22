@@ -1,7 +1,8 @@
 from .accumulator import MetricAccumulator
+from .base import EvaluatorBase
 from .constant import AlgorithmStateEnum, MetricLevelEnum
 from .state_management import AlgorithmStateEntry, AlgorithmStateManager
-from .user_item_base import UserItemKnowledgeBase
+from .user_item_knowledge_base import UserItemKnowledgeBase
 
 
 __all__ = [
@@ -11,4 +12,5 @@ __all__ = [
     "AlgorithmStateEntry",
     "AlgorithmStateEnum",
     "AlgorithmStateManager",
+    "EvaluatorBase",
 ]
