@@ -1,4 +1,4 @@
-from .evaluator_pipeline import EvaluatorPipeline
+from .evaluator import EvaluatorPipeline
 
 
 __all__ = [

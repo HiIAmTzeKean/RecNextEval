@@ -5,7 +5,7 @@ from warnings import warn
 
 from ...algorithms import Algorithm
 from ..core import AlgorithmStateManager
-from ..pipeline.evaluator_pipeline import EvaluatorPipeline
+from ..pipeline.evaluator import EvaluatorPipeline
 from .base import Builder
 
 
