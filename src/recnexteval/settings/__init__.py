@@ -5,8 +5,8 @@ generalize the splitting of the data, the interactions are first sorted in
 temporal order, and then the split is performed based on the setting. As this
 library only considers dataset with timestamp, we will consider the case of the
 single time point setting and the sliding window setting. The single time point
-setting is analogous to Setting 3 of [@sun2023]. The sliding window setting
-is analogous to Setting 1 of [@sun2023].
+setting is analogous to Setting 3 of Sun[@sun2023]. The sliding window setting
+is analogous to Setting 1 of Sun[@sun2023].
 
 ![data_split_definition](../../../assets/_static/data_split_definition.png)
 

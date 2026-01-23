@@ -26,7 +26,7 @@ class EvaluatorStreamer(EvaluatorBase):
     shown here, the evaluator will continue to stream the data until the end
     of the setting where there are no more splits.
 
-    ![stream scheme](../../../assets/_static/stream_scheme.png)
+    ![stream scheme](/assets/_static/stream_scheme.png)
 
     This class exposes a few of the core API that allows the user to stream
     the evaluation process. The following API are exposed:
@@ -49,7 +49,6 @@ class EvaluatorStreamer(EvaluatorBase):
         ignore_unknown_user: To ignore unknown users.
         ignore_unknown_item: To ignore unknown items.
         seed: Random seed for the evaluator.
-        strategy: Evaluation strategy to use.
     """
 
     _strategy: EvaluationStrategy = field(init=False)

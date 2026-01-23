@@ -16,42 +16,27 @@ class SlidingWindowSetting(Setting):
     """Sliding window setting for splitting data.
 
     The data is split into a background set and evaluation set. The evaluation set is defined by a sliding window
-    that moves over the data. The window size is defined by the :data:`window_size` parameter. The evaluation set comprises of the
-    unlabeled data and ground truth data stored in a list. The unlabeled data contains the last :data:`n_seq_data` interactions
+    that moves over the data. The window size is defined by the window_size parameter. The evaluation set comprises of the
+    unlabeled data and ground truth data stored in a list. The unlabeled data contains the last n_seq_data interactions
     of the users/item before the split point along with masked interactions after the split point. The number of
-    interactions per user/item is limited to :data:`top_K`.
-    The ground truth data is the interactions after the split point and spans :data:`window_size` seconds.
+    interactions per user/item is limited to top_K.
+    The ground truth data is the interactions after the split point and spans window_size seconds.
 
-    Core attribute
-    ====================
-    - :attr:`training_data`: Data used for training the model. Interval is `[0, background_t)`.
-    - :attr:`unlabeled_data`: List of unlabeled data. Each element is a :class:`InteractionMatrix` object of interval `[0, t)`.
-    - :attr:`ground_truth_data`: List of ground truth data. Each element is a :class:`InteractionMatrix` object
-      of interval `[t, t + window_size)`.
-    - :attr:`data_timestamp_limit`: List of timestamps that the splitter will slide over the data.
-    - :attr:`incremental_data`: List of data that is used to incrementally update the model. Each element is
-      a :class:`InteractionMatrix` object of interval `[t, t + window_size)`.
-
-    :param background_t: Time point to split the data into background and evaluation data. Split will be from `[0, t)`
-    :type background_t: int
-    :param window_size: Size of the window in seconds to slide over the data.
-        Affects the incremental data being released to the model. If
-        :param:`t_ground_truth_window` is not provided, ground truth data will also
-        take this window.
-    :type window_size: int, optional
-    :param n_seq_data: Number of last sequential interactions to provide as
-         data for model to make prediction. Defaults to 0.
-    :type n_seq_data: int, optional
-    :param top_K: Number of interaction per user that should be selected for evaluation purposes.
-    :type top_K: int, optional
-    :param t_upper: Upper bound on the timestamp of interactions.
-        Defaults to maximal integer value (acting as infinity).
-    :type t_upper: int, optional
-    :param t_ground_truth_window: Size of the window in seconds to slide over the data for ground truth data.
-        If not provided, defaults to window_size during computation.
-    :type t_ground_truth_window: int, optional
-    :param seed: Seed for random number generator.
-    :type seed: int, optional
+    Args:
+        background_t (int): Time point to split the data into background and evaluation data. Split will be from [0, t).
+        window_size (int, optional): Size of the window in seconds to slide over the data.
+            Affects the incremental data being released to the model. If
+            t_ground_truth_window is not provided, ground truth data will also
+            take this window. Defaults to np.iinfo(np.int32).max.
+        n_seq_data (int, optional): Number of last sequential interactions to provide as
+             data for model to make prediction. Defaults to 0.
+        top_K (int, optional): Number of interaction per user that should be selected for evaluation purposes.
+            Defaults to 10.
+        t_upper (int, optional): Upper bound on the timestamp of interactions.
+            Defaults to maximal integer value (acting as infinity).
+        t_ground_truth_window (int, optional): Size of the window in seconds to slide over the data for ground truth data.
+            If not provided, defaults to window_size during computation.
+        seed (int, optional): Seed for random number generator. Defaults to 42.
     """
 
     IS_BASE: bool = False
@@ -84,11 +69,11 @@ class SlidingWindowSetting(Setting):
 
         self.t_ground_truth_window = t_ground_truth_window
 
-        self._background_splitter = TimestampSplitter(background_t, None, None)
+        self._background_splitter = TimestampSplitter(t=background_t, t_lower=None, t_upper=self.t_upper)
         self._window_splitter = NLastInteractionTimestampSplitter(
-            background_t,
-            t_ground_truth_window,
-            n_seq_data,
+            t=background_t,
+            t_upper=t_ground_truth_window,
+            n_seq_data=n_seq_data,
         )
 
     def _split(self, data: InteractionMatrix) -> None:
@@ -119,7 +104,7 @@ class SlidingWindowSetting(Setting):
             self._t_window.append(sub_time)
             # the set used for eval will always have a timestamp greater than
             # data released such that it is unknown to the model
-            self._window_splitter.update_split_point(sub_time)
+            self._window_splitter.update_split_point(t=sub_time)
             past_interaction, future_interaction = self._window_splitter.split(data)
 
             # if past_interaction, future_interaction is empty, log an info message

@@ -50,9 +50,9 @@ class SingleTimePointSetting(Setting):
     ):
         super().__init__(seed=seed)
         self.t = background_t
-        """Seconds before `t` timestamp value to be used in `background_set`."""
+        """Epoch timestamp value to be used in for training set."""
         self.t_upper = t_upper
-        """Seconds after `t` timestamp value to be used in `ground_truth_data`."""
+        """Epoch value to be added to `t` as upper bound for evaluation data."""
         self.n_seq_data = n_seq_data
         self.top_K = top_K
 

@@ -61,15 +61,15 @@ class NLastInteractionTimestampSplitter(TimestampSplitter):
             A 2-tuple containing the `past_interaction` and `future_interaction` matrices.
         """
         if self.t_upper is None:
-            future_interaction = data.timestamps_gte(self.t)
+            future_interaction = data.timestamps_gte(timestamp=self.t)
         else:
-            future_interaction = data.timestamps_lt(self.t + self.t_upper).timestamps_gte(self.t)
+            future_interaction = data.timestamps_lt(timestamp=self.t + self.t_upper).timestamps_gte(timestamp=self.t)
 
         if self.include_all_past_data:
-            past_interaction = data.timestamps_lt(self.t)
+            past_interaction = data.timestamps_lt(timestamp=self.t)
         else:
             past_interaction = data.get_users_n_last_interaction(
-                self.n_seq_data, self.t, future_interaction.user_ids
+                n_seq_data=self.n_seq_data, t_upper=self.t, user_in=future_interaction.user_ids
             )
 
         logger.debug(f"{self.identifier} has complete split")
