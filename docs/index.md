@@ -1,4 +1,4 @@
-## Welcome to recnexteval's documentation
+# Welcome to RecNextEval's documentation
 
 ![recnexteval logo](assets/_static/logo_name.png)
 
