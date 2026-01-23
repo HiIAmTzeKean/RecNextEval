@@ -37,7 +37,7 @@ Functions to control logging level and warning suppression:
 - `suppress_warnings`: Suppress all Python warnings
 - `suppress_specific_warnings`: Suppress specific warning types
 
-## Logging Example
+### Logging Example
 
 ```python
 import logging

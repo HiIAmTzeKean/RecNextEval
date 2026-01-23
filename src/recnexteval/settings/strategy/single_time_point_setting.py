@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 class SingleTimePointSetting(Setting):
     """Single time point setting for data split.
 
-    Splits an interaction dataset at a single timestamp into background
-    (training) data and evaluation data. The evaluation data can be
+    Splits an interaction dataset at a single timestamp into training
+    data and evaluation data. The evaluation data can be
     further processed to produce unlabeled inputs and ground-truth
     targets for model evaluation.
 
     Args:
-        background_t: Time point to split the data. The background
-            split covers interactions with timestamps in `[0, background_t)`.
+        training_t: Time point to split the data. The training
+            split covers interactions with timestamps in `[0, training_t)`.
         n_seq_data: Number of last sequential interactions
             to provide as input for prediction. Defaults to `1`.
         top_K: Number of interactions per user to select for
@@ -37,11 +37,12 @@ class SingleTimePointSetting(Setting):
         seed: Random seed for reproducible behavior.
             If None, a seed will be generated.
     """
+
     IS_BASE: bool = False
 
     def __init__(
         self,
-        background_t: int,
+        training_t: int,
         n_seq_data: int = 1,
         top_K: int = 1,
         t_upper: int = np.iinfo(np.int32).max,
@@ -49,30 +50,30 @@ class SingleTimePointSetting(Setting):
         seed: int = 42,
     ):
         super().__init__(seed=seed)
-        self.t = background_t
+        self.t = training_t
         """Epoch timestamp value to be used in for training set."""
         self.t_upper = t_upper
         """Epoch value to be added to `t` as upper bound for evaluation data."""
         self.n_seq_data = n_seq_data
         self.top_K = top_K
 
-        logger.info("Splitting data at time %s with t_upper interval %s", background_t, t_upper)
+        logger.info("Splitting data at time %s with t_upper interval %s", training_t, t_upper)
 
-        self._background_splitter = TimestampSplitter(
-            t=background_t,
+        self._training_data_splitter = TimestampSplitter(
+            t=training_t,
             t_lower=None,
             t_upper=t_upper,
         )
         self._splitter = NLastInteractionTimestampSplitter(
-            t=background_t,
+            t=training_t,
             t_upper=t_upper,
             n_seq_data=n_seq_data,
             include_all_past_data=include_all_past_data,
         )
-        self._t_window = background_t
+        self._t_window = training_t
 
     def _split(self, data: InteractionMatrix) -> None:
-        """Split the dataset by timestamp into background and evaluation sets.
+        """Split the dataset by timestamp into training and evaluation sets.
 
         The method raises :class:`TimestampAttributeMissingError` when the
         provided :class:`InteractionMatrix` does not contain timestamp
@@ -93,7 +94,7 @@ class SingleTimePointSetting(Setting):
                 " in the data. No data will be in the training set."
             )
 
-        self._training_data, _ = self._background_splitter.split(data)
+        self._training_data, _ = self._training_data_splitter.split(data)
         past_interaction, future_interaction = self._splitter.split(data)
         self._unlabeled_data, self._ground_truth_data = self.prediction_data_processor.process(
             past_interaction=past_interaction,
@@ -102,7 +103,7 @@ class SingleTimePointSetting(Setting):
         )
 
         if len(self._training_data) == 0:
-            logger.info("Background data is empty after splitting at time %s", self.t)
+            logger.info("Training data is empty after splitting at time %s", self.t)
         if len(self._unlabeled_data) == 0:
             logger.info("Unlabeled data is empty after splitting at time %s", self.t)
         if len(self._ground_truth_data) == 0:

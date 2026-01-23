@@ -11,6 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class LeaveNOutSetting(Setting):
+    """Leave-N-Out setting for splitting data.
+
+    Splits the dataset into training and test sets by leaving out the last N interactions
+    for each user as test data, using the previous n_seq_data interactions as context.
+    """
+
     IS_BASE: bool = False
 
     def __init__(
@@ -23,17 +29,14 @@ class LeaveNOutSetting(Setting):
         self.n_seq_data = n_seq_data
         # we use top_K to denote the number of items to predict
         self.top_K = N
-
         logger.info("Splitting data")
-
         self._splitter = NLastInteractionSplitter(N, n_seq_data)
 
     def _split(self, data: InteractionMatrix) -> None:
-        """Splits your dataset into a training, validation and test dataset
-            based on the timestamp of the interaction.
+        """Splits the dataset into training and test sets based on interaction timestamps.
 
-        :param data: Interaction matrix to be split. Must contain timestamps.
-        :type data: InteractionMatrix
+        Args:
+            data: Interaction matrix to be split. Must contain timestamps.
         """
 
         self._training_data, future_interaction = self._splitter.split(data)

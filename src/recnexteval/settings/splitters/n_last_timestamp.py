@@ -17,7 +17,7 @@ class NLastInteractionTimestampSplitter(TimestampSplitter):
 
     Attributes:
         past_interaction: List of unlabeled data. Interval is `[0, t)`.
-        - future_interaction: Data used for training the model.
+        future_interaction: Data used for training the model.
             Interval is `[t, t+t_upper)` or `[t,inf]`.
         n_seq_data: Number of last interactions to provide as data for model to make prediction.
             These interactions are past interactions from before the timestamp `t`.

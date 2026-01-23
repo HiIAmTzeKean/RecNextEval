@@ -45,7 +45,7 @@ class Splitter(ABC):
         """Split an interaction matrix into two parts.
 
         Args:
-            data (InteractionMatrix): The interaction dataset to split.
+            data: The interaction dataset to split.
 
         Returns:
             A pair of `InteractionMatrix` objects representing the two parts.
