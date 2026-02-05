@@ -44,7 +44,7 @@ class MetricAccumulator:
         for algo_name in self.acc:
             for metric_identifier in self.acc[algo_name]:
                 metric = self.acc[algo_name][metric_identifier]
-                results[(algo_name, f"t={metric.timestamp_limit}", metric.name)] = (
+                results[(algo_name, metric.timestamp_limit, metric.name)] = (
                     metric.micro_result
                 )
         return results
@@ -69,8 +69,8 @@ class MetricAccumulator:
                         f"at t={metric.timestamp_limit} has 0 score but there are interactions. "
                         f"{algo_name} did not have any correct predictions."
                     )
-                results[(algo_name, f"t={metric.timestamp_limit}", metric.name)]["score"] = score
-                results[(algo_name, f"t={metric.timestamp_limit}", metric.name)]["num_user"] = (
+                results[(algo_name, metric.timestamp_limit, metric.name)]["score"] = score
+                results[(algo_name, metric.timestamp_limit, metric.name)]["num_user"] = (
                     num_user
                 )
         return results
@@ -128,8 +128,8 @@ class MetricAccumulator:
 
     def df_metric(
         self,
-        filter_timestamp: Optional[int] = None,
-        filter_algo: Optional[str] = None,
+        filter_timestamp: None | int = None,
+        filter_algo: None | str = None,
         level: MetricLevelEnum = MetricLevelEnum.MACRO,
     ) -> pd.DataFrame:
         """Get DataFrame representation of metrics.
