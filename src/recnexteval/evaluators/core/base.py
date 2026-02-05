@@ -2,7 +2,9 @@ import logging
 from dataclasses import dataclass, field
 from typing import Literal
 
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 from scipy.sparse import csr_matrix
 
 from ...matrix import PredictionMatrix
@@ -204,6 +206,105 @@ class EvaluatorBase:
             timestamp = filter_timestamp
 
         return self._acc.df_metric(filter_algo=filter_algo, filter_timestamp=timestamp, level=level)
+
+    def plot_macro_level_metric(self) -> None:
+        df = self.metric_results("macro")
+        df = df.reset_index()
+        ax = sns.barplot(
+            data=df,
+            x="metric",
+            y="macro_score",
+            hue="algorithm",
+            edgecolor="black"
+        )
+
+        ax.set_xlabel("Metric")
+        ax.set_ylabel("Macro score")
+        ax.set_title("Macro-level scores by metric and algorithm")
+
+        for container in ax.containers:
+            ax.bar_label(container, fmt='%.4f', padding=3, fontsize=8)
+        plt.legend(
+            title="Algorithm",
+            loc="upper center",
+            bbox_to_anchor=(0.5, -0.1),
+        )
+        ax.grid(axis="y", alpha=0.3, linestyle="--")
+        plt.show()
+
+    def plot_micro_level_metric(self) -> None:
+        df = self.metric_results("micro")
+        df = df.reset_index()
+        ax = sns.barplot(
+            data=df,
+            x="metric",
+            y="micro_score",
+            hue="algorithm",
+            edgecolor="black"
+        )
+
+        ax.set_xlabel("Metric")
+        ax.set_ylabel("Micro score")
+        ax.set_title("Micro-level scores by metric and algorithm")
+
+        for container in ax.containers:
+            ax.bar_label(container, fmt='%.4f', padding=3, fontsize=8)
+        plt.legend(
+            title="Algorithm",
+            loc="upper center",
+            bbox_to_anchor=(0.5, -0.1),
+        )
+        ax.grid(axis="y", alpha=0.3, linestyle="--")
+        plt.show()
+
+    def plot_window_level_metric(self) -> None:
+        df = self.metric_results("window")
+        metrics = df["metric"].unique()
+        n_metrics = len(metrics)
+
+        fig, axes = plt.subplots(n_metrics, 1, figsize=(10, 7), sharey=False)
+        if n_metrics == 1:
+            axes = [axes]
+
+        fig.suptitle("Window-level scores over time", fontsize=14, fontweight="bold")
+
+        for ax, metric in zip(axes, metrics):
+            # Filter data for this metric
+            metric_df = df[df["metric"] == metric]
+
+            # Plot line for each algorithm
+            sns.lineplot(
+                data=metric_df,
+                x="timestamp",
+                y="window_score",
+                hue="algorithm",
+                marker="o",
+                markersize=6,
+                linewidth=2,
+                ax=ax,
+            )
+            ax.set_xlabel("Timestamp (epoch)")
+            ax.set_ylabel(f"{metric} score")
+            ax.grid(axis="both", alpha=0.3, linestyle="--")
+
+            # Remove individual legends
+            if ax.get_legend() is not None:
+                ax.get_legend().remove()
+
+        # Create single shared legend at bottom
+        handles, labels = axes[0].get_legend_handles_labels()
+
+        fig.legend(
+            handles,
+            labels,
+            title="Algorithm",
+            loc="lower center",
+            bbox_to_anchor=(0.5, -0.15),
+            ncol=1,  # vertical stacking
+            frameon=True,
+            fontsize=9,
+        )
+        plt.show()
 
     def restore(self) -> None:
         """Restore the generators before pickling.
