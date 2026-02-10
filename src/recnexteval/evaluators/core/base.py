@@ -259,6 +259,7 @@ class EvaluatorBase:
 
     def plot_window_level_metric(self) -> None:
         df = self.metric_results("window")
+        df = df.reset_index()
         metrics = df["metric"].unique()
         n_metrics = len(metrics)
 
