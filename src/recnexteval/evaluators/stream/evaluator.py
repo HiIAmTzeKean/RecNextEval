@@ -100,7 +100,7 @@ class EvaluatorStreamer(EvaluatorBase):
         # TODO: allow programmer to register anytime
         self._transition_state(new_state=EvaluatorState.STARTED, allow_from=[EvaluatorState.INITIALIZED])
 
-    def register_algorithm(
+    def register_model(
         self,
         algorithm: Algorithm,
         algorithm_name: None | str = None,
