@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from warnings import warn
 
 from ...algorithms import Algorithm
-from ..pipeline.evaluator_pipeline import EvaluatorPipeline
-from ..state_management import AlgorithmStateManager
+from ..core import AlgorithmStateManager
+from ..pipeline.evaluator import EvaluatorPipeline
 from .base import Builder
 
 

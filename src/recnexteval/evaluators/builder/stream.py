@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 
-from ..stream.evaluator_stream import EvaluatorStreamer
+from ..stream.evaluator import EvaluatorStreamer
 from .base import Builder
 
 

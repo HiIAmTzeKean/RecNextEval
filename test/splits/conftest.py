@@ -9,10 +9,10 @@ from recnexteval.matrix import InteractionMatrix
 @pytest.fixture
 def matrix(test_dataframe: pd.DataFrame, session_vars: dict) -> InteractionMatrix:
     return InteractionMatrix(
-        test_dataframe,
-        session_vars["ITEM_IX"],
-        session_vars["USER_IX"],
-        session_vars["TIMESTAMP_IX"],
+        df=test_dataframe,
+        item_ix=session_vars["ITEM_IX"],
+        user_ix=session_vars["USER_IX"],
+        timestamp_ix=session_vars["TIMESTAMP_IX"],
     )
 
 
@@ -28,10 +28,10 @@ def empty_matrix(session_vars: dict) -> InteractionMatrix:
         ]
     )
     return InteractionMatrix(
-        df,
-        session_vars["ITEM_IX"],
-        session_vars["USER_IX"],
-        session_vars["TIMESTAMP_IX"],
+        df=df,
+        item_ix=session_vars["ITEM_IX"],
+        user_ix=session_vars["USER_IX"],
+        timestamp_ix=session_vars["TIMESTAMP_IX"],
     )
 
 
@@ -41,10 +41,10 @@ def matrix_no_timestamps(test_dataframe: pd.DataFrame, session_vars: dict[str, A
     df = test_dataframe.drop(columns=[session_vars["TIMESTAMP_IX"]])
     # Create matrix with skip_df_processing to avoid requiring timestamp column
     im = InteractionMatrix(
-        df,
-        session_vars["ITEM_IX"],
-        session_vars["USER_IX"],
-        "dummy",
+        df=df,
+        item_ix=session_vars["ITEM_IX"],
+        user_ix=session_vars["USER_IX"],
+        timestamp_ix="dummy",
         skip_df_processing=True,
     )
     # Remove the timestamp column to simulate no timestamps

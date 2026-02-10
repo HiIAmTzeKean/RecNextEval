@@ -13,7 +13,7 @@ class TestSingleTimePointSetting:
     def default_setting(self, session_vars: Dict[str, Any]) -> SingleTimePointSetting:
         """Fixture for default SingleTimePointSetting."""
         return SingleTimePointSetting(
-            background_t=session_vars["BACKGROUND_T"],
+            training_t=session_vars["BACKGROUND_T"],
             n_seq_data=session_vars["N_SEQ_DATA"],
             seed=session_vars["SEED"],
         )
@@ -22,7 +22,7 @@ class TestSingleTimePointSetting:
     def custom_setting(self) -> SingleTimePointSetting:
         """Fixture for custom SingleTimePointSetting."""
         return SingleTimePointSetting(
-            background_t=5,
+            training_t=5,
             n_seq_data=2,
             top_K=3,
             t_upper=20,
@@ -70,7 +70,7 @@ class TestSingleTimePointSetting:
     ])
     def test_initialization_parametrized(self, background_t: int, n_seq_data: int, top_K: int) -> None:
         """Test initialization with various parameters."""
-        setting = SingleTimePointSetting(background_t=background_t, n_seq_data=n_seq_data, top_K=top_K, seed=42)
+        setting = SingleTimePointSetting(training_t=background_t, n_seq_data=n_seq_data, top_K=top_K, seed=42)
         assert setting.t == background_t
         assert setting.n_seq_data == n_seq_data
         assert setting.top_K == top_K
@@ -156,14 +156,14 @@ class TestSingleTimePointSetting:
 
     def test_split_with_empty_background(self, matrix: InteractionMatrix) -> None:
         """Test split with background_t before any data."""
-        setting = SingleTimePointSetting(background_t=-1, n_seq_data=1, seed=42)
+        setting = SingleTimePointSetting(training_t=-1, n_seq_data=1, seed=42)
         with pytest.warns(UserWarning, match="Splitting at time.*before the first timestamp"):
             setting.split(matrix)
         assert setting.is_ready
 
     def test_split_no_n_seq_data(self, matrix: InteractionMatrix) -> None:
         """Test split with n_seq_data=0."""
-        setting = SingleTimePointSetting(background_t=4, n_seq_data=0, seed=42)
+        setting = SingleTimePointSetting(training_t=4, n_seq_data=0, seed=42)
         setting.split(matrix)
         assert setting.is_ready
         unlabeled = setting.unlabeled_data
@@ -177,7 +177,7 @@ class TestSingleTimePointSetting:
 
     def test_split_background_t_before_min_timestamp_warns(self, matrix: InteractionMatrix) -> None:
         """Test split with background_t before min timestamp warns."""
-        setting = SingleTimePointSetting(background_t=-1, n_seq_data=1, seed=42)
+        setting = SingleTimePointSetting(training_t=-1, n_seq_data=1, seed=42)
         with pytest.warns(UserWarning, match="Splitting at time.*before the first timestamp"):
             setting.split(matrix)
 

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ..state_management import AlgorithmStateManager
+from ..core import AlgorithmStateManager
 
 
 class EvaluationStrategy(ABC):

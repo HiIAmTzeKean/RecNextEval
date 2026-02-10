@@ -37,7 +37,7 @@ Functions to control logging level and warning suppression:
 - `suppress_warnings`: Suppress all Python warnings
 - `suppress_specific_warnings`: Suppress specific warning types
 
-## Logging Example
+### Logging Example
 
 ```python
 import logging
@@ -75,6 +75,7 @@ from .path import (
     get_data_dir,
     get_logs_dir,
     get_repo_root,
+    resolve_path,
     safe_dir,
 )
 from .util import (
@@ -112,4 +113,5 @@ __all__ = [
     "get_repo_root",
     "invert",
     "generate_algorithm_uuid",
+    "resolve_path",
 ]

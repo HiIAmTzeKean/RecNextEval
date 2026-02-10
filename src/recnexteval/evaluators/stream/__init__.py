@@ -1,4 +1,4 @@
-from .evaluator_stream import EvaluatorStreamer
+from .evaluator import EvaluatorStreamer
 from .strategy import EvaluationStrategy, SingleTimePointStrategy, SlidingWindowStrategy
 
 

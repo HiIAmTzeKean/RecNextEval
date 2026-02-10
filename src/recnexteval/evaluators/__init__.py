@@ -60,7 +60,9 @@ Pipeline Evaluation:
 
 ```python
 from recnexteval.evaluators import EvaluatorPipeline
-from recnexteval.evaluators.builder import EvaluatorPipelineBuilder
+from recnexteval.evaluators.builder import (
+    EvaluatorPipelineBuilder,
+)
 from recnexteval.settings import Setting
 from recnexteval.datasets import AmazonMusicDataset
 
@@ -89,7 +91,9 @@ Streaming Evaluation:
 
 ```python
 from recnexteval.evaluators import EvaluatorStreamer
-from recnexteval.evaluators.builder import EvaluatorStreamerBuilder
+from recnexteval.evaluators.builder import (
+    EvaluatorStreamerBuilder,
+)
 from recnexteval.algorithms import MostPopular
 
 # Build streaming evaluator
@@ -112,7 +116,9 @@ while True:
         training_data = evaluator.get_training_data(algo_id)
 
         # Get unlabeled data
-        unlabeled_data = evaluator.get_unlabeled_data(algo_id)
+        unlabeled_data = evaluator.get_unlabeled_data(
+            algo_id
+        )
 
         # Algorithm makes predictions
         predictions = algorithm.predict(unlabeled_data)
@@ -158,22 +164,28 @@ Utility Classes
 Utility classes that support the evaluation process:
 
 - `MetricLevelEnum`: Enumeration for different metric aggregation levels
-- `UserItemBaseStatus`: Tracks known and unknown users/items during evaluation
+- `UserItemKnowledgeBase`: Tracks known and unknown users/items during evaluation
 
 These utilities handle the complex state management required for streaming
 evaluation scenarios.
 """
 
-from .accumulator import MetricAccumulator
-from .base import EvaluatorBase
 from .builder import (
     Builder,
     EvaluatorPipelineBuilder,
     EvaluatorStreamerBuilder,
 )
+from .core import (
+    AlgorithmStateEntry,
+    AlgorithmStateEnum,
+    AlgorithmStateManager,
+    EvaluatorBase,
+    MetricAccumulator,
+    MetricLevelEnum,
+    UserItemKnowledgeBase,
+)
 from .pipeline import EvaluatorPipeline
 from .stream import EvaluatorStreamer
-from .util import MetricLevelEnum, UserItemBaseStatus
 
 
 __all__ = [
@@ -185,5 +197,8 @@ __all__ = [
     "EvaluatorStreamer",
     "MetricAccumulator",
     "MetricLevelEnum",
-    "UserItemBaseStatus",
+    "UserItemKnowledgeBase",
+    "AlgorithmStateEntry",
+    "AlgorithmStateEnum",
+    "AlgorithmStateManager",
 ]

@@ -13,7 +13,7 @@ class TestSlidingWindowSetting:
     def default_setting(self, session_vars: Dict[str, Any]) -> SlidingWindowSetting:
         """Fixture for default SlidingWindowSetting."""
         return SlidingWindowSetting(
-            background_t=session_vars["BACKGROUND_T"],
+            training_t=session_vars["BACKGROUND_T"],
             window_size=session_vars["WINDOW_SIZE"],
             n_seq_data=session_vars["N_SEQ_DATA"],
             seed=session_vars["SEED"],
@@ -23,7 +23,7 @@ class TestSlidingWindowSetting:
     def custom_setting(self) -> SlidingWindowSetting:
         """Fixture for custom SlidingWindowSetting."""
         return SlidingWindowSetting(
-            background_t=5,
+            training_t=5,
             window_size=2,
             n_seq_data=3,
             top_K=5,
@@ -76,15 +76,15 @@ class TestSlidingWindowSetting:
     ])
     def test_initialization_parametrized(self, background_t: int, window_size: int, n_seq_data: int) -> None:
         """Test initialization with various parameters."""
-        setting = SlidingWindowSetting(background_t=background_t, window_size=window_size, n_seq_data=n_seq_data, seed=42)
+        setting = SlidingWindowSetting(training_t=background_t, window_size=window_size, n_seq_data=n_seq_data, seed=42)
         assert setting.t == background_t
         assert setting.window_size == window_size
         assert setting.n_seq_data == n_seq_data
 
     def test_invalid_t_upper_raises_error(self) -> None:
-        """Test that t_upper < background_t raises ValueError."""
-        with pytest.raises(ValueError, match="t_upper must be greater than background_t"):
-            SlidingWindowSetting(background_t=10, t_upper=5, seed=42)
+        """Test that t_upper < training_t raises ValueError."""
+        with pytest.raises(ValueError, match="t_upper must be greater than training_t"):
+            SlidingWindowSetting(training_t=10, t_upper=5, seed=42)
 
     def test_split_basic(self, default_setting: SlidingWindowSetting, matrix: InteractionMatrix) -> None:
         """Test basic split functionality."""
@@ -193,7 +193,7 @@ class TestSlidingWindowSetting:
 
     def test_split_background_t_before_min_timestamp_warns(self, matrix: InteractionMatrix) -> None:
         """Test split with background_t before min timestamp warns."""
-        setting = SlidingWindowSetting(background_t=-1, window_size=3, seed=42)
+        setting = SlidingWindowSetting(training_t=-1, window_size=3, seed=42)
         with pytest.warns(UserWarning, match="Splitting at time.*before the first"):
             setting.split(matrix)
 
@@ -205,6 +205,6 @@ class TestSlidingWindowSetting:
 
     def test_split_with_small_window(self, matrix: InteractionMatrix) -> None:
         """Test split with small window size."""
-        setting = SlidingWindowSetting(background_t=4, window_size=1, n_seq_data=0, seed=42)
+        setting = SlidingWindowSetting(training_t=4, window_size=1, n_seq_data=0, seed=42)
         setting.split(matrix)
         assert setting.num_split > 1  # Should create multiple splits

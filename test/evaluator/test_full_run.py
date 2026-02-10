@@ -70,7 +70,7 @@ class TestFullRun:
         from recnexteval.algorithms import ItemKNNIncremental
 
         algo = ItemKNNIncremental(K=10)
-        algo_id = evaluator.register_algorithm(algo)
+        algo_id = evaluator.register_model(algo)
 
         evaluator.start_stream()
 

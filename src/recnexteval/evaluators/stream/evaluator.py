@@ -7,9 +7,7 @@ from scipy.sparse import csr_matrix
 from ...algorithms import Algorithm
 from ...matrix import InteractionMatrix, PredictionMatrix
 from ...settings import EOWSettingError
-from ..accumulator import MetricAccumulator
-from ..base import EvaluatorBase
-from ..state_management import AlgorithmStateEnum, AlgorithmStateManager
+from ..core import AlgorithmStateEnum, AlgorithmStateManager, EvaluatorBase, MetricAccumulator
 from .state import EvaluatorState
 from .strategy import EvaluationStrategy, SlidingWindowStrategy
 
@@ -28,7 +26,7 @@ class EvaluatorStreamer(EvaluatorBase):
     shown here, the evaluator will continue to stream the data until the end
     of the setting where there are no more splits.
 
-    ![stream scheme](../../../assets/_static/stream_scheme.png)
+    ![stream scheme](/assets/_static/stream_scheme.png)
 
     This class exposes a few of the core API that allows the user to stream
     the evaluation process. The following API are exposed:
@@ -51,7 +49,6 @@ class EvaluatorStreamer(EvaluatorBase):
         ignore_unknown_user: To ignore unknown users.
         ignore_unknown_item: To ignore unknown items.
         seed: Random seed for the evaluator.
-        strategy: Evaluation strategy to use.
     """
 
     _strategy: EvaluationStrategy = field(init=False)
@@ -103,7 +100,7 @@ class EvaluatorStreamer(EvaluatorBase):
         # TODO: allow programmer to register anytime
         self._transition_state(new_state=EvaluatorState.STARTED, allow_from=[EvaluatorState.INITIALIZED])
 
-    def register_algorithm(
+    def register_model(
         self,
         algorithm: Algorithm,
         algorithm_name: None | str = None,
