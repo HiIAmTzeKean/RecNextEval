@@ -35,13 +35,13 @@ class TestStreamer:
         evaluator = builder.build()
 
         algo = ItemKNNIncremental(K=10)
-        algo_id = evaluator.register_algorithm(algo)
+        algo_id = evaluator.register_model(algo)
         print(algo_id)
 
         from recnexteval.algorithms import ItemKNNStatic
 
         external_model = ItemKNNIncremental(K=10)
-        external_model_id = evaluator.register_algorithm(external_model)
+        external_model_id = evaluator.register_model(external_model)
         print(external_model_id)
 
         evaluator.start_stream()

@@ -41,9 +41,9 @@ class TestMinItemsPerUser:
     def test_min_items_per_user_dataset(self, test_dataset, test_dataframe, session_vars):
         test_dataset.add_filter(
             MinItemsPerUser(
-                session_vars["MIN_ITEM_USER"],
-                test_dataset.session_vars["ITEM_IX"],
-                test_dataset.session_vars["USER_IX"],
+                min_items_per_user=session_vars["MIN_ITEM_USER"],
+                item_ix=test_dataset.session_vars["ITEM_IX"],
+                user_ix=test_dataset.session_vars["USER_IX"],
             )
         )
         m = test_dataset.load()

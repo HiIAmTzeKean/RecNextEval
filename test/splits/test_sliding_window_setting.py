@@ -82,8 +82,8 @@ class TestSlidingWindowSetting:
         assert setting.n_seq_data == n_seq_data
 
     def test_invalid_t_upper_raises_error(self) -> None:
-        """Test that t_upper < background_t raises ValueError."""
-        with pytest.raises(ValueError, match="t_upper must be greater than background_t"):
+        """Test that t_upper < training_t raises ValueError."""
+        with pytest.raises(ValueError, match="t_upper must be greater than training_t"):
             SlidingWindowSetting(training_t=10, t_upper=5, seed=42)
 
     def test_split_basic(self, default_setting: SlidingWindowSetting, matrix: InteractionMatrix) -> None:

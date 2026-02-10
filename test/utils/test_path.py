@@ -14,33 +14,25 @@ Run with: pytest test/utils/test_path.py -v
 """
 
 import os
-import shutil
-import tempfile
 from pathlib import Path
-from typing import Optional
-from unittest.mock import patch, MagicMock
+
 import pytest
 
-# Assuming your path module is at src/recnexteval/utils/path.py
-# Adjust import path as needed
-try:
-    from recnexteval.utils.path import (
-        get_repo_root,
-        get_data_dir,
-        get_logs_dir,
-        get_cache_dir,
-        safe_dir,
-        resolve_path,
-    )
-    import recnexteval.utils.path as path_module
-except ImportError:
-    pytest.skip("recnexteval.utils.path not available", allow_module_level=True)
+import recnexteval.utils.path as path_module
+from recnexteval.utils import (
+    get_cache_dir,
+    get_data_dir,
+    get_logs_dir,
+    get_repo_root,
+    resolve_path,
+    safe_dir,
+)
 
 
 class BasePathTest:
     """Base class for path testing with common utilities."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Setup before each test method."""
         # Clear any cached repo root
         path_module._REPO_ROOT_CACHE = None
@@ -48,7 +40,7 @@ class BasePathTest:
         # Store original environment
         self.original_env = os.environ.copy()
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Cleanup after each test method."""
         # Restore original environment
         os.environ.clear()
