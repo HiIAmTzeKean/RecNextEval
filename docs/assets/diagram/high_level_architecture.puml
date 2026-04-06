@@ -1,0 +1,82 @@
+@startuml high_level_architecture
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle frame
+skinparam defaultFontSize 13
+skinparam packageFontSize 15
+skinparam packageFontStyle bold
+skinparam arrowThickness 2
+skinparam noteFontSize 11
+
+title <b>RecNextEval</b> — Library Architecture Overview
+
+' ============================================================
+' COMPONENTS
+' ============================================================
+
+package "Data Ingestion" as data #E3F2FD {
+    component "**Dataset**\nLoad public datasets\n(Amazon, MovieLens,\nLastFM, Yelp)" as dataset
+    component "**Preprocessing**\nFilter interactions\n& map user/item IDs" as preproc
+}
+
+package "Core Representation" as core #E8F5E9 {
+    component "**InteractionMatrix**\nSparse user x item\ninteraction data" as matrix
+}
+
+package "Evaluation Setup" as setup #F3E5F5 {
+    component "**Setting**\nTemporal train/test\nsplitting strategies" as setting
+}
+
+package "Recommendation" as rec #FFF9C4 {
+    component "**Algorithm**\nTrain & predict\n(Baselines, ItemKNN)" as algo
+}
+
+package "Measurement" as meas #FFEBEE {
+    component "**Metrics**\nPrecision, Recall,\nNDCG, DCG, Hit" as metrics
+}
+
+package "Orchestration" as orch #E8EAF6 {
+    component "**Evaluator**\nPipeline or Streaming\nevaluation loop" as evaluator
+    component "**Builder**\nFluent API to\nassemble experiments" as builder
+    component "**Registry**\nResolve components\nby name" as registry
+}
+
+' ============================================================
+' DATA FLOW
+' ============================================================
+
+dataset -right--> preproc : raw\nDataFrame
+preproc -down-> matrix : filtered &\nindex-mapped
+
+matrix -down-> setting : full\ninteraction data
+
+setting -right-> evaluator : train / unlabeled /\nground truth splits
+
+evaluator -up-> algo : fit() &\npredict()
+evaluator -down-> metrics : calculate()\nper window
+
+builder -left-> evaluator : builds
+builder ..> registry : resolves\nalgorithms\n& metrics
+
+' ============================================================
+' RESULT
+' ============================================================
+
+component "**Results**\nMacro / micro\naggregated scores" as results #F5F5F5
+
+metrics -right-> results
+
+' ============================================================
+' FLOW ANNOTATION
+' ============================================================
+
+note bottom of core
+  **Typical Workflow**
+  1. Load a dataset
+  2. Choose a splitting setting (single split, sliding window, leave-N-out)
+  3. Register algorithms & metrics via the Builder
+  4. Run the Evaluator — it loops over time windows:
+     train → predict → measure → accumulate
+  5. Retrieve aggregated results
+end note
+@enduml
