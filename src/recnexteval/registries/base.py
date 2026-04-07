@@ -3,7 +3,7 @@ import logging
 from types import ModuleType
 from typing import Generic, TypeVar
 
-from ..models import BaseModel
+from ..core import BaseModel
 
 
 logger = logging.getLogger(__name__)
