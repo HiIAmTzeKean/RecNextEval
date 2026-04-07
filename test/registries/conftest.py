@@ -2,7 +2,7 @@ from types import ModuleType
 
 import pytest
 
-from recnexteval.models import BaseModel
+from recnexteval.core import BaseModel
 from recnexteval.registries import Registry
 
 
