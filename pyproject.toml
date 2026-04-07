@@ -34,6 +34,7 @@ dev = [
     "ipywidgets>=8.1.8",
     "jupyter>=1.1.1",
     "pytest>=9.0.1",
+    "ruff>=0.14.7",
     {include-group = "docs"},
 ]
 docs = [
@@ -45,7 +46,6 @@ docs = [
     "mkdocs-literate-nav>=0.6.2",
     "mkdocs-section-index>=0.3.10",
     "mkdocs-minify-plugin>=0.8.0",
-    "ruff>=0.14.7",
 ]
 
 [tool.uv]
@@ -58,3 +58,17 @@ required-environments = [
 [build-system]
 requires = ["uv_build>=0.9.11,<0.10.0"]
 build-backend = "uv_build"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+]
