@@ -51,7 +51,7 @@ class EvaluatorBase:
             training_data = self.setting.training_data
         else:
             logger.debug("Not first step, getting previous ground truth data as training data")
-            training_data = self.setting.get_split_at(self._run_step).incremental
+            training_data = self.setting.get_split_at(self._run_step - 1).incremental
             if training_data is None:
                 raise ValueError("Incremental data is None in sliding window setting")
             self.user_item_base.reset_unknown_user_item_base()
