@@ -8,7 +8,7 @@ import httpx
 import pandas as pd
 
 from ..matrix import InteractionMatrix
-from ..models import BaseModel
+from ..core import BaseModel
 from ..preprocessing import Filter, MinItemsPerUser, MinUsersPerItem
 from ..preprocessing.preprocessor import DataFramePreprocessor
 from ..utils.path import safe_dir

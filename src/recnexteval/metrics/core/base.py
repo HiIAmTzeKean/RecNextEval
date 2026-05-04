@@ -6,7 +6,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from ...algorithms.utils import get_top_K_ranks
-from ...models import BaseModel, ParamMixin
+from ...core import BaseModel, ParamMixin
 
 
 logger = logging.getLogger(__name__)

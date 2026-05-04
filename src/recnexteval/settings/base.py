@@ -5,7 +5,7 @@ from typing import Any, Self, Union
 from warnings import warn
 
 from recnexteval.matrix import InteractionMatrix
-from ..models import BaseModel, ParamMixin
+from ..core import BaseModel, ParamMixin
 from .exception import EOWSettingError
 from .processor import PredictionDataProcessor
 from .schema import SplitResult

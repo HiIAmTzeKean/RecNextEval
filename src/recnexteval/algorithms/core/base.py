@@ -11,7 +11,7 @@ from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
 from recnexteval.matrix import InteractionMatrix, ItemUserBasedEnum, PredictionMatrix, to_csr_matrix
-from ...models import BaseModel, ParamMixin
+from ...core import BaseModel, ParamMixin
 from ...utils import add_columns_to_csr_matrix, add_rows_to_csr_matrix
 
 
